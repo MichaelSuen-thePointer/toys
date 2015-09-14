@@ -13,12 +13,12 @@ private:
 };
 
 template <typename T>
-class ConvenientPointer
+class SmartPointer
 {
 private:
 	using DeleterType = void(*)(T*);
 
-	volatile size_t* _Count;
+	mutable volatile size_t* _Count;
 	T* _Object;
 	DeleterType _Deleter;
 
@@ -43,19 +43,19 @@ private:
 		}
 	}
 public:
-	ConvenientPointer()
+	SmartPointer()
 		: _Count(nullptr)
 		, _Object(nullptr)
 		, _Deleter(nullptr)
 	{}
 
-	ConvenientPointer(T* pointer)
+	SmartPointer(T* pointer, DeleterType deleter = PointerBackend<T>::DefaultDeleter)
 		: _Count(new size_t(1))
 		, _Object(pointer)
-		, _Deleter(PointerBackend<T>::DefaultDeleter)
+		, _Deleter(deleter)
 	{}
 
-	ConvenientPointer(const ConvenientPointer<T>& pointer)
+	SmartPointer(const SmartPointer<T>& pointer)
 		: _Count(pointer._Count)
 		, _Object(pointer._Object)
 		, _Deleter(pointer._Deleter)
@@ -63,7 +63,7 @@ public:
 		CountInc();
 	}
 
-	ConvenientPointer(ConvenientPointer<T>&& pointer)
+	SmartPointer(SmartPointer<T>&& pointer)
 		: _Count(pointer._Count)
 		, _Object(pointer._Object)
 		, _Deleter(pointer._Deleter)
@@ -72,7 +72,64 @@ public:
 		pointer._Object = nullptr;
 		pointer._Deleter = nullptr;
 	}
+	SmartPointer::~SmartPointer()
+	{
+		CountDec();
+	}
+	SmartPointer& operator=(const SmartPointer<T>& pointer)
+	{
+		if (this != &pointer)
+		{
+			CountDec();
+			_Object = pointer._Object;
+			_Count = pointer._Count;
+			_Deleter = pointer._Deleter;
+			CountInc();
+		}
+		return *this;
+	}
+	SmartPointer& operator=(SmartPointer<T>&& pointer)
+	{
+		if (this != &pointer)
+		{
+			CountDec();
+			_Object = pointer._Object;
+			_Count = pointer._Count;
+			_Deleter = pointer._Deleter;
 
+			pointer._Object = nullptr;
+			pointer._Count = nullptr;
+			pointer._Deleter = nullptr;
+		}
+		return *this;
+	}
+	bool operator==(const T* pointer)const { return _Object == pointer; }
+	bool operator!=(const T* pointer)const { return _Object != pointer; }
+	bool operator>(const T* pointer)const { return _Object > pointer; }
+	bool operator>=(const T* pointer)const { return _Object >= pointer; }
+	bool operator<(const T* pointer)const { return _Object < pointer; }
+	bool operator<=(const T* pointer)const { return _Object <= pointer; }
 
+	bool operator==(const SmartPointer<T>& pointer)const { return _Object == pointer._Object; }
+	bool operator!=(const SmartPointer<T>& pointer)const { return _Object != pointer._Object; }
+	bool operator>(const SmartPointer<T>& pointer)const { return _Object > pointer._Object; }
+	bool operator>=(const SmartPointer<T>& pointer)const { return _Object >= pointer._Object; }
+	bool operator<(const SmartPointer<T>& pointer)const { return _Object < pointer._Object; }
+	bool operator<=(const SmartPointer<T>& pointer)const { return _Object <= pointer._Object; }
+
+	operator bool() const
+	{
+		return _Object != nullptr;
+	}
+
+	T* Get() const
+	{
+		return _Object;
+	}
+
+	T* operator->()const
+	{
+		return _Object;
+	}
 };
 #endif // !POINTER_H
