@@ -36,6 +36,12 @@
     <ClInclude Include="Template.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="CPS.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Tree.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

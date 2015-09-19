@@ -1,7 +1,10 @@
-#include"Pointer.h"
+#include <functional>
+#include <algorithm>
+#include <iostream>
+#include <vector>
+#include "Tree.h"
 
 int main()
 {
-	SmartPointer<int> a;
-	const SmartPointer<int> b;
+	Tree<int> tree;
 }
