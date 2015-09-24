@@ -151,6 +151,7 @@
     <ClInclude Include="CPS.h" />
     <ClInclude Include="Event.h" />
     <ClInclude Include="Function.h" />
+    <ClInclude Include="List.h" />
     <ClInclude Include="Numbers.h" />
     <ClInclude Include="Pointer.h" />
     <ClInclude Include="String.h" />

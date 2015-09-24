@@ -3,8 +3,11 @@
 #include <iostream>
 #include <vector>
 #include "Tree.h"
-
+#include "List.h"
+using namespace pl;
+using namespace pl::container;
 int main()
 {
-	Tree<int> tree;
+    FixSizeList<int> alist(10);
+    FixSizeList<int> blist(alist);
 }

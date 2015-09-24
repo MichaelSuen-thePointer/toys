@@ -213,6 +213,8 @@ public:
 		where.Right() = tree.Release();
 		where.Right()->Parent = where.Raw();
 	}
+
+
 };
 
 #endif // !TREE_H

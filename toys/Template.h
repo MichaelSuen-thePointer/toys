@@ -5,16 +5,6 @@
 namespace pl
 {
 
-struct TrueType
-{
-	const static bool Value = true;
-};
-
-struct FalseType
-{
-	const static bool Value = false;
-};
-
 struct EmptyType
 {};
 
@@ -25,7 +15,7 @@ struct EnableIf
 template<typename T>
 struct EnableIf<true, T>
 {
-	using Type = typename T;
+    using Type = typename T;
 };
 
 template<typename T1, typename T2>
@@ -39,28 +29,30 @@ struct TypeEq<T, T>: TrueType
 template<typename TEnum>
 struct EnumBase
 {
-	using Type = __underlying_type(TEnum);
+    using Type = __underlying_type(TEnum);
 };
+
 
 template<typename T>
 struct RemoveConst
 {
-	using Type = T;
+    using Type = T;
 };
 
 template<typename T>
 struct RemoveConst<const T>
 {
-	using Type = T;
+    using Type = T;
 };
 
 template<typename TPOD, TPOD V>
 struct PODType
 {
-	static const TPOD Value = V;
-	using Type = TPOD;
-	using Self = PODType<TPOD, V>;
+    static const TPOD Value = V;
+    using Type = TPOD;
+    using Self = PODType<TPOD, V>;
 };
+
 
 template<int VInt>
 using Int = PODType<int, VInt>;
@@ -70,6 +62,35 @@ using Bool = PODType<bool, VBool>;
 
 template<char VChar>
 using Char = PODType<char, VChar>;
+
+template<typename TTest, typename TTrue, typename TFalse>
+struct If;
+
+template<typename TTrue, typename TFalse>
+struct If<Bool<true>, TTrue, TFalse>
+{
+    using Result = TTrue;
+};
+
+template<typename TTrue, typename TFalse>
+struct If<Bool<false>, TTrue, TFalse>
+{
+    using Result = TFalse;
+};
+
+struct POD
+{};
+struct NotPOD
+{};
+
+template<typename T>
+struct IsPOD: Bool<__is_pod(T)>
+{
+    using Result = typename If<Self, POD, NotPOD>::Result;
+};
+
+using TrueType = Bool<true>;
+using FalseType = Bool<false>;
 
 #define TN typename
 #define TT template
@@ -83,7 +104,7 @@ SS Name
 TT<VType V1, VType V2>													\
 SS Name<TType<V1>, TType<V2>>											\
 {																		\
-	using Result = TN RType<(V1 op V2)>;								\
+    using Result = TN RType<(V1 op V2)>;								\
 }
 
 #define DEFINE_UNA_META_OPERATION_HEAD(Name)	\
@@ -94,7 +115,7 @@ SS Name
 TT<VType V1>															\
 SS Name<TType<V1>>														\
 {																		\
-	using Result = TN RType<(op V1)>;									\
+    using Result = TN RType<(op V1)>;									\
 }
 
 DEFINE_BIN_META_OPERATION_HEAD(Add);
@@ -148,40 +169,25 @@ DEFINE_UNA_META_OPERATION_BODY(Not, Bool, bool, Bool, !);
 #undef TN
 #undef SS
 
-template<typename TTest, typename TTrue, typename TFalse>
-struct If;
-
-template<typename TTrue, typename TFalse>
-struct If<Bool<true>, TTrue, TFalse>
-{
-	using Result = TTrue;
-};
-
-template<typename TTrue, typename TFalse>
-struct If<Bool<false>, TTrue, TFalse>
-{
-	using Result = TFalse;
-};
-
 template<typename TTimes, template<typename TResult> typename TProc, typename TDefVal>
 struct FOR_N;
 
 template<template<typename TResult> typename TProc, typename TDefVal, int VTimes>
 struct FOR_N<Int<VTimes>, TProc, TDefVal>
 {
-	using Result = typename TProc<
-		typename FOR_N<
-			Int<VTimes - 1>,
-			TProc,
-			TDefVal
-		>::Result
-	>::Result;
+    using Result = typename TProc<
+        typename FOR_N<
+            Int<VTimes - 1>,
+            TProc,
+            TDefVal
+        >::Result
+    >::Result;
 };
 
 template<template<typename TResult> typename TProc, typename TDefVal>
 struct FOR_N<Int<0>, TProc, TDefVal>
 {
-	using Result = typename TDefVal;
+    using Result = typename TDefVal;
 };
 
 #if defined SIMPLIFIED_TML
@@ -204,15 +210,15 @@ struct List;
 template<typename T, typename... TArgs>
 struct ListGet<List<T, TArgs...>>
 {
-	using First = typename T;
-	using Rest = List<TArgs...>;
+    using First = typename T;
+    using Rest = List<TArgs...>;
 };
 
 template<typename... TArgs>
 struct List: ListGet<List<TArgs...>>
 {
-	using Base = ListGet<List<TArgs...>>;
-	using Self = List<TArgs...>;
+    using Base = ListGet<List<TArgs...>>;
+    using Self = List<TArgs...>;
 };
 
 template<typename T>
@@ -221,12 +227,12 @@ struct ListIsEmpty;
 template<typename T, typename... TArgs>
 struct ListIsEmpty<List<T, TArgs...>>
 {
-	using Result = Bool<false>;
+    using Result = Bool<false>;
 };
 template<>
 struct ListIsEmpty<List<>>
 {
-	using Result = Bool<true>;
+    using Result = Bool<true>;
 };
 
 template<typename A, template<typename... Args> typename B>
@@ -235,7 +241,7 @@ struct Change;
 template<template<typename... Args>typename A, template<typename... Args>typename B, typename... Args>
 struct Change<A<Args...>, B>
 {
-	using Result = B<Args...>;
+    using Result = B<Args...>;
 };
 
 template<typename T1, typename T2>
@@ -244,7 +250,7 @@ struct ListConnect;
 template<typename... TArgs1, typename... TArgs2>
 struct ListConnect<List<TArgs1...>, List<TArgs2...>>
 {
-	using Result = typename List<TArgs1..., TArgs2...>;
+    using Result = typename List<TArgs1..., TArgs2...>;
 };
 template<typename T>
 struct ListReverse;
@@ -252,19 +258,19 @@ struct ListReverse;
 template<typename... TArgs>
 struct ListReverse<List<TArgs...>>
 {
-	using Param = typename List<TArgs...>;
-	using Result = typename ListConnect<
-		typename ListReverse<
-			typename Param::Rest
-		>::Result,
-		typename List<typename Param::First>
-	>::Result;
+    using Param = typename List<TArgs...>;
+    using Result = typename ListConnect<
+        typename ListReverse<
+            typename Param::Rest
+        >::Result,
+        typename List<typename Param::First>
+    >::Result;
 };
 
 template<typename T>
 struct ListReverse<List<T>>
 {
-	using Result = typename List<T>;
+    using Result = typename List<T>;
 };
 
 template<template<typename ST> typename TApplicative, typename T1>
@@ -273,25 +279,25 @@ struct ListMap;
 template<template<typename ST> typename TApplicative, typename... TArgs>
 struct ListMap<TApplicative, List<TArgs...>>
 {
-	using Param = typename List<TArgs...>;
-	using Result = typename ListConnect<
-		List<
-			typename TApplicative<
-				typename Param::First
-			>::Result
-		>,
-		typename ListMap<
-			TApplicative,
-			typename Param::Rest
-		>::Result
-	>::Result;
+    using Param = typename List<TArgs...>;
+    using Result = typename ListConnect<
+        List<
+            typename TApplicative<
+                typename Param::First
+            >::Result
+        >,
+        typename ListMap<
+            TApplicative,
+            typename Param::Rest
+        >::Result
+    >::Result;
 };
 
 template<template<typename ST> typename TApplicative, typename TLast>
 struct ListMap<TApplicative, List<TLast>>
 {
-	using Param = typename List<TLast>;
-	using Result = typename List<typename TApplicative<TLast>::Result>;
+    using Param = typename List<TLast>;
+    using Result = typename List<typename TApplicative<TLast>::Result>;
 };
 
 template<typename TVal, template<typename TArg1, typename TArg2> typename TBinFunc, typename T>
@@ -300,22 +306,22 @@ struct ListFoldLeft;
 template<typename TVal, template<typename TArg1, typename TArg2> typename TBinFunc, typename... TArgs>
 struct ListFoldLeft<TVal, TBinFunc, List<TArgs...>>
 {
-	using Param = List<TArgs...>;
-	using Result = typename ListFoldLeft<
-		typename TBinFunc<
-			TVal,
-			typename Param::First
-		>::Result,
-		TBinFunc,
-		typename Param::Rest		
-	>::Result;
+    using Param = List<TArgs...>;
+    using Result = typename ListFoldLeft<
+        typename TBinFunc<
+            TVal,
+            typename Param::First
+        >::Result,
+        TBinFunc,
+        typename Param::Rest		
+    >::Result;
 };
 
 template<typename TVal, template<typename TArg1, typename TArg2> typename TBinFunc, typename TLast>
 struct ListFoldLeft<TVal, TBinFunc, List<TLast>>
 {
-	using Param = List<TLast>;
-	using Result = typename TBinFunc<TVal, typename Param::First>::Result;
+    using Param = List<TLast>;
+    using Result = typename TBinFunc<TVal, typename Param::First>::Result;
 };
 
 template<typename TVal, template<typename TArg1, typename TArg2> typename TBinFunc, typename T>
@@ -324,30 +330,30 @@ struct ListScanLeft;
 template<typename TVal, template<typename TArg1, typename TArg2> typename TBinFunc, typename... TArgs>
 struct ListScanLeft<TVal, TBinFunc, List<TArgs...>>
 {
-	using Param = List<TArgs...>;
-	using Value = typename TBinFunc<
-		TVal,
-		typename Param::First
-	>::Result;
-	using Result = typename ListConnect<
-		List<Value>,
-		typename ListScanLeft<
-			Value,
-			TBinFunc,
-			typename Param::Rest
-		>::Result
-	>::Result;
+    using Param = List<TArgs...>;
+    using Value = typename TBinFunc<
+        TVal,
+        typename Param::First
+    >::Result;
+    using Result = typename ListConnect<
+        List<Value>,
+        typename ListScanLeft<
+            Value,
+            TBinFunc,
+            typename Param::Rest
+        >::Result
+    >::Result;
 };
 
 template<typename TVal, template<typename TArg1, typename TArg2> typename TBinFunc, typename TLast>
 struct ListScanLeft<TVal, TBinFunc, List<TLast>>
 {
-	using Param = List<TLast>;
-	using Value = typename TBinFunc<
-		TVal,
-		typename Param::First
-	>::Result;
-	using Result = List<Value>;
+    using Param = List<TLast>;
+    using Value = typename TBinFunc<
+        TVal,
+        typename Param::First
+    >::Result;
+    using Result = List<Value>;
 };
 
 template<template<typename TArg> typename TFilter, typename T>
@@ -356,41 +362,41 @@ struct ListFilter;
 template<template<typename TArg> typename TFilter, typename... TArgs>
 struct ListFilter<TFilter, List<TArgs...>>
 {
-	using Param = List<TArgs...>;
-	using Result = typename ListConnect<
-		typename If<
-			typename TFilter<typename Param::First>::Result,
-			List<typename Param::First>,
-			List<>
-		>::Result,
-		typename ListFilter<
-			TFilter, 
-			typename Param::Rest
-		>::Result
-	>::Result;
+    using Param = List<TArgs...>;
+    using Result = typename ListConnect<
+        typename If<
+            typename TFilter<typename Param::First>::Result,
+            List<typename Param::First>,
+            List<>
+        >::Result,
+        typename ListFilter<
+            TFilter, 
+            typename Param::Rest
+        >::Result
+    >::Result;
 };
 
 template<template<typename TArg> typename TFilter, typename TLast>
 struct ListFilter<TFilter, List<TLast>>
 {
-	using Param = List<TLast>;
-	using Result = typename If<
-		typename TFilter<typename Param::First>::Result,
-		List<typename Param::First>,
-		List<>
-	>::Result;
+    using Param = List<TLast>;
+    using Result = typename If<
+        typename TFilter<typename Param::First>::Result,
+        List<typename Param::First>,
+        List<>
+    >::Result;
 };
 
 template<typename T>
 struct MapNone
 {
-	using Result = T;
+    using Result = T;
 };
 
 template<typename T>
 struct FilterNone
 {
-	using Result = Bool<true>;
+    using Result = Bool<true>;
 };
 
 template<template<typename TVal> typename TProcToVal, template<typename TVal> typename TFilterProc, typename... TSeq>
@@ -399,34 +405,34 @@ struct ListGeneration;
 template<template<typename TVal> typename TProcToVal, template<typename TVal> typename TFilterProc, typename... TSeq>
 struct ListGeneration<TProcToVal, TFilterProc, List<TSeq...>>
 {
-	using FilterResult = typename ListFilter<TFilterProc, List<TSeq...>>::Result;
-	using Result = typename ListMap<TProcToVal, FilterResult>::Result;
+    using FilterResult = typename ListFilter<TFilterProc, List<TSeq...>>::Result;
+    using Result = typename ListMap<TProcToVal, FilterResult>::Result;
 };
 
 template<typename TType, TType VBegin, TType VEnd, TType VCurr = VBegin>
 struct Range
 {
-	using Result = typename ListConnect<
-		List<PODType<TType, VCurr>>, 
-		typename If<
-			Bool<VCurr < VEnd>, 
-			typename Range<TType, VBegin, VEnd, VCurr + 1>::Result,
-			List<>
-		>::Result
-	>::Result;
+    using Result = typename ListConnect<
+        List<PODType<TType, VCurr>>, 
+        typename If<
+            Bool<VCurr < VEnd>, 
+            typename Range<TType, VBegin, VEnd, VCurr + 1>::Result,
+            List<>
+        >::Result
+    >::Result;
 };
 
 template<typename T, T V, typename... TRest>
 void PrintList(List<PODType<T, V>, TRest...>)
 {
-	std::cout << V << ' ';
-	PrintList(List<TRest...>());
+    std::cout << V << ' ';
+    PrintList(List<TRest...>());
 }
 
 template<typename T, T V>
 void PrintList(List<PODType<T, V>>)
 {
-	std::cout << V;
+    std::cout << V;
 }
 
 
@@ -446,9 +452,9 @@ void PrintList(List<PODType<T, V>>)
 template<typename T>																\
 struct Name																			\
 {																					\
-	template<typename ClassTemplateName> static Bool<true> test(AcceptTypePtr){}	\
-	template<typename ClassTemplateName> static Bool<false> test(...) {}			\
-	using Result = decltype(test<T>(nullptr));										\
+    template<typename ClassTemplateName> static Bool<true> test(AcceptTypePtr){}	\
+    template<typename ClassTemplateName> static Bool<false> test(...) {}			\
+    using Result = decltype(test<T>(nullptr));										\
 }
 
 DEFINE_TYPE_SFINAE_CLASS(IsClass, TClass, int TClass::*);
