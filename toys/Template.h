@@ -2,6 +2,11 @@
 #ifndef TEMPLATE_H
 #define TEMPLATE_H
 
+#include <type_traits>
+#include <utility>
+
+int a = std::forward<int>(10);
+
 namespace pl
 {
 
@@ -44,6 +49,52 @@ struct RemoveConst<const T>
 {
     using Type = T;
 };
+
+template<class T>
+struct RemoveReference
+{
+    using Type = T;
+};
+
+template<class T>
+struct RemoveReference<T&>
+{
+    using Type = T;
+};
+
+template<class T>
+struct RemoveReference<T&&>
+{
+    using Type = T;
+};
+
+template<class T>
+struct IsLvalueReference: FalseType
+{};
+
+template<class T>
+struct IsLvalueReference<T&> : TrueType
+{};
+
+
+template<class T> inline constexpr 
+typename RemoveReference<T>::Type&& RvalueCast(T&& value) noexcept
+{
+    return (static_cast<typename RemoveReference<T>::Type&&>(value));
+}
+
+template<class T> inline constexpr
+T&& PerfectForward(typename RemoveReference<T>::Type& value) noexcept
+{
+    return static_cast<T&&>(value);
+}
+
+template<class T> inline constexpr
+T&& PerfectForward(typename RemoveReference<T>::Type&& value) noexcept
+{
+    static_assert(!IsLvalueReference<T>::Value, "bad forward call");
+    return (static_cast<T&&>(value));
+}
 
 template<typename TPOD, TPOD V>
 struct PODType

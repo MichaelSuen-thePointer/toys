@@ -5,6 +5,7 @@
 #ifndef FUNCTION_H
 #define FUNCTION_H
 #include <type_traits>
+
 namespace pl
 {
 namespace callable_backend
