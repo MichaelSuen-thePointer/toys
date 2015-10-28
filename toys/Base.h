@@ -34,11 +34,23 @@ public:
 
 using byte = unsigned char;
 
-template<typename T>
-bool GetBit(T value, size_t bit)
+struct Error
 {
-    assert(bit < sizeof(T) * 8);
-    return !!((value >> bit) & 1);
-}
+    const char* Message;
+    int Line;
+    Error(const char* message, int line)
+        : Message(message)
+        , Line(line)
+    {
+    }
+};
+
+#define FAST_FAIL do {throw Error("Fast fail called.", __LINE__);}while(0)
+#define FAIL(message) do {throw Error(message, __LINE__);}while(0)
+
+#if defined DEBUG || !defined NDEBUG
+#define PLDEBUG 1
+#endif
+
 }
 #endif // !BASE_H

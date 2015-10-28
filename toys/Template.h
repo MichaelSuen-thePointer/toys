@@ -2,13 +2,44 @@
 #ifndef TEMPLATE_H
 #define TEMPLATE_H
 
-#include <type_traits>
-#include <utility>
-
-int a = std::forward<int>(10);
-
 namespace pl
 {
+
+template<typename TPOD, TPOD V>
+struct PODType
+{
+    static const TPOD Value = V;
+    using Type = TPOD;
+    using Self = PODType<TPOD, V>;
+};
+
+template<int VInt>
+using Int = PODType<int, VInt>;
+
+template<bool VBool>
+using Bool = PODType<bool, VBool>;
+
+template<char VChar>
+using Char = PODType<char, VChar>;
+
+using TrueType = Bool<true>;
+using FalseType = Bool<false>;
+
+template<class TValue, class TPtr, class TConstPtr, class TRef, class TConstRef, class TSize, class TDiff>
+struct TypeAliases
+{
+    using ValueType = TValue;
+    using Ptr = TPtr;
+    using ConstPtr = TConstPtr;
+    using Ref = TRef;
+    using ConstRef = TConstRef;
+    using SizeType = TSize;
+    using DiffType = TDiff;
+};
+
+template<typename TValue>
+struct BasicTypeAliases: TypeAliases<TValue, TValue*, const TValue*, TValue&, const TValue&, size_t, ptrdiff_t>
+{};
 
 struct EmptyType
 {};
@@ -76,6 +107,49 @@ template<class T>
 struct IsLvalueReference<T&> : TrueType
 {};
 
+template<class _Ty>
+struct _IsFunction
+{	// determine whether _Ty is a function
+    using BoolType = FalseType;
+};
+
+template<class TRet, class... TArgs>
+struct _IsFunction<TRet(TArgs...)>
+{
+    using BoolType = TrueType;
+    using ReturnType = TRet;
+};
+
+template<class T>
+struct IsFunction: _IsFunction<T>::BoolType
+{
+};
+
+template<class T>
+struct IsConst: FalseType
+{};
+
+template<class T>
+struct IsConst<const T>: TrueType
+{};
+
+template<class T> inline
+T* _AddressOf(T& value, TrueType) noexcept
+{
+    return value;
+}
+
+template<class T> inline
+T* _AddressOf(T& value, FalseType) noexcept
+{
+    return reinterpret_cast<T*>(&const_cast<char&>(reinterpret_cast<const volatile char&>(value)));
+}
+
+template<class T> inline
+T* AddressOf(T& value) noexcept
+{
+    return _AddressOf(value, IsFunction<T>());
+}
 
 template<class T> inline constexpr 
 typename RemoveReference<T>::Type&& RvalueCast(T&& value) noexcept
@@ -96,23 +170,10 @@ T&& PerfectForward(typename RemoveReference<T>::Type&& value) noexcept
     return (static_cast<T&&>(value));
 }
 
-template<typename TPOD, TPOD V>
-struct PODType
-{
-    static const TPOD Value = V;
-    using Type = TPOD;
-    using Self = PODType<TPOD, V>;
-};
 
 
-template<int VInt>
-using Int = PODType<int, VInt>;
 
-template<bool VBool>
-using Bool = PODType<bool, VBool>;
 
-template<char VChar>
-using Char = PODType<char, VChar>;
 
 template<typename TTest, typename TTrue, typename TFalse>
 struct If;
@@ -140,8 +201,8 @@ struct IsPOD: Bool<__is_pod(T)>
     using Result = typename If<Self, POD, NotPOD>::Result;
 };
 
-using TrueType = Bool<true>;
-using FalseType = Bool<false>;
+namespace tml
+{
 
 #define TN typename
 #define TT template
@@ -240,18 +301,6 @@ struct FOR_N<Int<0>, TProc, TDefVal>
 {
     using Result = typename TDefVal;
 };
-
-#if defined SIMPLIFIED_TML
-
-#define IF If<
-#define THEN ,
-#define ELSE ,
-#define NOELSE , void
-#define NOTHEN , void
-#define ENDIF >::Result
-#define ELIF ELSE IF
-
-#endif
 
 template<typename T>
 struct ListGet;
@@ -486,6 +535,7 @@ void PrintList(List<PODType<T, V>>)
     std::cout << V;
 }
 
+}//namespace tml
 
 /*SFINAE*/
 
@@ -498,17 +548,6 @@ void PrintList(List<PODType<T, V>>)
 //public:
 //	using Result = decltype(test<T>(0));
 //};
-
-#define DEFINE_TYPE_SFINAE_CLASS(Name, ClassTemplateName, AcceptTypePtr)			\
-template<typename T>																\
-struct Name																			\
-{																					\
-    template<typename ClassTemplateName> static Bool<true> test(AcceptTypePtr){}	\
-    template<typename ClassTemplateName> static Bool<false> test(...) {}			\
-    using Result = decltype(test<T>(nullptr));										\
-}
-
-DEFINE_TYPE_SFINAE_CLASS(IsClass, TClass, int TClass::*);
 
 
 }

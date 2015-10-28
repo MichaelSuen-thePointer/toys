@@ -60,24 +60,6 @@ struct Add
 
 } //namespace number
 
-
-
-
-template<typename TEnum, typename TInteger>
-class EnumMapper
-{
-public:
-	using TTo = typename EnableIf<TypeEq<typename EnumBase<TEnum>::Type, TInteger>::Value, TInteger>::Type;
-};
-
-template<typename TEnum, typename TInteger, TEnum V>
-class StaticMapper : public EnumMapper<TEnum, TInteger>
-{
-public:
-	constexpr static TTo To = static_cast<TTo>(V);
-};
-
-
 } //namespace pl
 
 
