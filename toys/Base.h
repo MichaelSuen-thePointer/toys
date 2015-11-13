@@ -45,6 +45,18 @@ struct Error
     }
 };
 
+template<typename T>
+inline T Max(const T& left, const T& right)
+{
+    return left < right ? right : left;
+}
+
+template<typename T>
+inline T Min(const T& left, const T& right)
+{
+    return left < right ? left : right;
+}
+
 #define FAST_FAIL do {throw Error("Fast fail called.", __LINE__);}while(0)
 #define FAIL(message) do {throw Error(message, __LINE__);}while(0)
 
