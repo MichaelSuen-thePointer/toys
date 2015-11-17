@@ -2,6 +2,8 @@
 #ifndef TEMPLATE_H
 #define TEMPLATE_H
 
+#include "Base.h"
+
 namespace pl
 {
 
@@ -25,156 +27,6 @@ using Char = PODType<char, VChar>;
 using TrueType = Bool<true>;
 using FalseType = Bool<false>;
 
-template<class TValue, class TPtr, class TConstPtr, class TRef, class TConstRef, class TSize, class TDiff>
-struct TypeAliases
-{
-    using ValueType = TValue;
-    using Ptr = TPtr;
-    using ConstPtr = TConstPtr;
-    using Ref = TRef;
-    using ConstRef = TConstRef;
-    using SizeType = TSize;
-    using DiffType = TDiff;
-};
-
-template<typename TValue>
-struct BasicTypeAliases: TypeAliases<TValue, TValue*, const TValue*, TValue&, const TValue&, size_t, ptrdiff_t>
-{};
-
-struct EmptyType
-{};
-
-template<bool VTest, typename T = void>
-struct EnableIf
-{};
-
-template<typename T>
-struct EnableIf<true, T>
-{
-    using Type = typename T;
-};
-
-template<typename T1, typename T2>
-struct TypeEq: FalseType
-{};
-
-template<typename T>
-struct TypeEq<T, T>: TrueType
-{};
-
-template<typename TEnum>
-struct EnumBase
-{
-    using Type = __underlying_type(TEnum);
-};
-
-
-template<typename T>
-struct RemoveConst
-{
-    using Type = T;
-};
-
-template<typename T>
-struct RemoveConst<const T>
-{
-    using Type = T;
-};
-
-template<class T>
-struct RemoveReference
-{
-    using Type = T;
-};
-
-template<class T>
-struct RemoveReference<T&>
-{
-    using Type = T;
-};
-
-template<class T>
-struct RemoveReference<T&&>
-{
-    using Type = T;
-};
-
-template<class T>
-struct IsLvalueReference: FalseType
-{};
-
-template<class T>
-struct IsLvalueReference<T&> : TrueType
-{};
-
-template<class _Ty>
-struct _IsFunction
-{	// determine whether _Ty is a function
-    using BoolType = FalseType;
-};
-
-template<class TRet, class... TArgs>
-struct _IsFunction<TRet(TArgs...)>
-{
-    using BoolType = TrueType;
-    using ReturnType = TRet;
-};
-
-template<class T>
-struct IsFunction: _IsFunction<T>::BoolType
-{
-};
-
-template<class T>
-struct IsConst: FalseType
-{};
-
-template<class T>
-struct IsConst<const T>: TrueType
-{};
-
-template<class T> inline
-T* _AddressOf(T& value, TrueType) noexcept
-{
-    return value;
-}
-
-template<class T> inline
-T* _AddressOf(T& value, FalseType) noexcept
-{
-    return reinterpret_cast<T*>(&const_cast<char&>(reinterpret_cast<const volatile char&>(value)));
-}
-
-template<class T> inline
-T* AddressOf(T& value) noexcept
-{
-    return _AddressOf(value, IsFunction<T>());
-}
-
-template<class T> inline constexpr 
-typename RemoveReference<T>::Type&& RvalueCast(T&& value) noexcept
-{
-    return (static_cast<typename RemoveReference<T>::Type&&>(value));
-}
-
-template<class T> inline constexpr
-T&& PerfectForward(typename RemoveReference<T>::Type& value) noexcept
-{
-    return static_cast<T&&>(value);
-}
-
-template<class T> inline constexpr
-T&& PerfectForward(typename RemoveReference<T>::Type&& value) noexcept
-{
-    static_assert(!IsLvalueReference<T>::Value, "bad forward call");
-    return (static_cast<T&&>(value));
-}
-
-
-
-
-
-
 template<typename TTest, typename TTrue, typename TFalse>
 struct If;
 
@@ -188,17 +40,6 @@ template<typename TTrue, typename TFalse>
 struct If<Bool<false>, TTrue, TFalse>
 {
     using Result = TFalse;
-};
-
-struct POD
-{};
-struct NotPOD
-{};
-
-template<typename T>
-struct IsPOD: Bool<__is_pod(T)>
-{
-    using Result = typename If<Self, POD, NotPOD>::Result;
 };
 
 namespace tml
@@ -345,7 +186,8 @@ struct Change<A<Args...>, B>
 };
 
 template<typename T1, typename T2>
-struct ListConnect;
+struct ListConnect
+{};
 
 template<typename... TArgs1, typename... TArgs2>
 struct ListConnect<List<TArgs1...>, List<TArgs2...>>
@@ -536,6 +378,390 @@ void PrintList(List<PODType<T, V>>)
 }
 
 }//namespace tml
+
+#ifdef ENABLE_TYPE_ALIASES
+
+template<class TValue, class TPtr, class TConstPtr, class TRef, class TConstRef, class TSize, class TDiff>
+struct TypeAliases
+{
+    using ValueType = TValue;
+    using Ptr = TPtr;
+    using ConstPtr = TConstPtr;
+    using Ref = TRef;
+    using ConstRef = TConstRef;
+    using SizeType = TSize;
+    using DiffType = TDiff;
+};
+
+template<typename TValue>
+struct BasicTypeAliases: TypeAliases<TValue, TValue*, const TValue*, TValue&, const TValue&, size_t, ptrdiff_t>
+{};
+
+#endif //ENABLE_TYPE_ALIASES
+
+template<class T>
+struct PtrTraits
+{
+};
+
+template<class T>
+struct PtrTraits<T*>
+{
+    using IsConst = FalseType;
+    using IsVolatile = FalseType;
+};
+
+template<class T>
+struct PtrTraits<const T*>
+{
+    using IsConst = TrueType;
+    using IsVolatile = FalseType;
+};
+
+template<class T>
+struct PtrTraits<volatile T*>
+{
+    using IsConst = FalseType;
+    using IsVolatile = TrueType;
+};
+
+template<class T>
+struct PtrTraits<const volatile T*>
+{
+    using IsConst = TrueType;
+    using IsVolatile = TrueType;
+};
+
+struct EmptyType
+{};
+
+template<bool VTest, typename T = void>
+struct EnableIf
+{};
+
+template<typename T>
+struct EnableIf<true, T>
+{
+    using Type = typename T;
+};
+
+template<typename T1, typename T2>
+struct TypeEq
+{
+    using Result = FalseType;
+};
+
+template<typename T>
+struct TypeEq<T, T>
+{
+    using Result = TrueType;
+};
+
+template<typename TEnum>
+struct EnumBase
+{
+    using Type = __underlying_type(TEnum);
+};
+
+template<typename T>
+struct RemoveConst
+{
+    using Type = T;
+};
+
+template<typename T>
+struct RemoveConst<const T>
+{
+    using Type = T;
+};
+
+template<typename T>
+struct RemoveConst<const T[]>
+{
+    using Type = T[];
+};
+
+template<typename T, size_t N>
+struct RemoveConst<const T[N]>
+{
+    using Type = T[N];
+};
+
+template<class T>
+struct RemoveReference
+{
+    using Type = T;
+};
+
+template<class T>
+struct RemoveReference<T&>
+{
+    using Type = T;
+};
+
+template<class T>
+struct RemoveReference<T&&>
+{
+    using Type = T;
+};
+
+template<class T>
+struct IsLvalueReference: FalseType
+{};
+
+template<class T>
+struct IsLvalueReference<T&> : TrueType
+{};
+
+template<class _Ty>
+struct IsFunction
+{
+    using Result = FalseType;
+};
+
+template<class TRet, class... TArgs>
+struct IsFunction<TRet(TArgs...)>
+{
+    using Result = TrueType;
+};
+
+template<class T>
+struct IsConst
+{
+    using Result = class tml::And<
+        class PtrTraits<T*>::IsConst,
+        class tml::Not<
+            class IsFunction<T>::Result
+        >::Result
+    >::Result;
+};
+
+template<class T, size_t N>
+struct IsConst<T[N]>
+{
+    using Result = FalseType;
+};
+
+template<class T, size_t N>
+struct IsConst<const T[N]>
+{
+    using Result = TrueType;
+};
+
+template<class T>
+struct IsConst<T&>
+{
+    using Result = FalseType;
+};
+
+template<class T>
+struct IsConst<T&&>
+{
+    using Result = FalseType;
+};
+
+template<class T>
+struct IsInteger
+{
+    using Result = FalseType;
+};
+template<>
+struct IsInteger<char>
+{
+    using Result = TrueType;
+};
+template<>
+struct IsInteger<signed char>
+{
+    using Result = TrueType;
+};
+template<>
+struct IsInteger<unsigned char>
+{
+    using Result = TrueType;
+};
+
+template<>
+struct IsInteger<int>
+{
+    using Result = TrueType;
+};
+
+template<>
+struct IsInteger<unsigned int>
+{
+    using Result = TrueType;
+};
+
+template<>
+struct IsInteger<long>
+{
+    using Result = TrueType;
+};
+
+template<>
+struct IsInteger<unsigned long>
+{
+    using Result = TrueType;
+};
+
+template<>
+struct IsInteger<long long>
+{
+    using Result = TrueType;
+};
+
+template<>
+struct IsInteger<unsigned long long>
+{
+    using Result = TrueType;
+};
+
+template<>
+struct IsInteger<char16_t>
+{
+    using Result = TrueType;
+};
+
+template<>
+struct IsInteger<char32_t>
+{
+    using Result = TrueType;
+};
+
+template<>
+struct IsInteger<wchar_t>
+{
+    using Result = TrueType;
+};
+
+template<class T>
+struct IsFloat
+{
+    using Result = FalseType;
+};
+
+template<>
+struct IsFloat<float>
+{
+    using Result = TrueType;
+};
+
+template<>
+struct IsFloat<double>
+{
+    using Result = TrueType;
+};
+
+template<>
+struct IsFloat<long double>
+{
+    using Result = TrueType;
+};
+
+template<class T>
+struct TypeEqFactory
+{
+private:
+    template<class TTest>
+    struct IsImpl
+    {
+        using Result = typename TypeEq<T, TTest>::Result;
+    };
+public:
+    template<class TTest>
+    using Get = typename IsImpl<TTest>;
+};
+
+template<class T>
+struct IsCString
+{
+    using Result = typename TypeEq<typename RemoveConst<T>::Type, char*>::Result;
+};
+
+template<class T> inline
+T* _AddressOf(T& value, TrueType) noexcept
+{
+    return value;
+}
+
+template<class T> inline
+T* _AddressOf(T& value, FalseType) noexcept
+{
+    return reinterpret_cast<T*>(&const_cast<char&>(reinterpret_cast<const volatile char&>(value)));
+}
+
+template<class T> inline
+T* AddressOf(T& value) noexcept
+{
+    return _AddressOf(value, IsFunction<T>());
+}
+
+template<class T> inline constexpr 
+typename RemoveReference<T>::Type&& RvalueCast(T&& value) noexcept
+{
+    return (static_cast<typename RemoveReference<T>::Type&&>(value));
+}
+
+template<class T> inline constexpr
+T&& PerfectForward(typename RemoveReference<T>::Type& value) noexcept
+{
+    return static_cast<T&&>(value);
+}
+
+template<class T> inline constexpr
+T&& PerfectForward(typename RemoveReference<T>::Type&& value) noexcept
+{
+    static_assert(!IsLvalueReference<T>::Value, "bad forward call");
+    return (static_cast<T&&>(value));
+}
+
+
+template<int N>
+using State = Int<N>;
+
+template<int N, class TStatement, template<class T> class TPred, template<class T> class... TPreds>
+struct MultiStateImpl
+{
+    using Result = typename If<
+        typename TPred<TStatement>::Result,
+        State<N>,
+        typename MultiStateImpl<
+            N + 1,
+            TStatement,
+            TPreds...
+        >::Result
+    >::Result;
+};
+
+template<int N, class TStatement, template<class T> class TPred>
+struct MultiStateImpl<N, TStatement, TPred>
+{
+    using Result = typename If <
+        typename TPred<TStatement>::Result,
+        State<N>,
+        FalseType
+    >::Result;
+};
+
+template<class TStatement, template<class T> class... TPreds>
+struct MultiState
+{
+    using Result = typename MultiStateImpl<0, TStatement, TPreds...>::Result;
+};
+
+struct POD
+{};
+struct NotPOD
+{};
+
+template<typename T>
+struct IsPOD: Bool<__is_pod(T)>
+{
+    using Result = typename If<Self, POD, NotPOD>::Result;
+};
+
+
 
 /*SFINAE*/
 

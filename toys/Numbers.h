@@ -103,17 +103,34 @@ protected:
     std::vector<bool> _num;
     NumberType _type;
 
-    static std::vector<bool> Parse(char* strNumber);
+    static std::vector<bool> Parse(const char* strNumber);
     static Radix Preprocess(std::string& strNumber);
     static void Map2(std::string& strNumber, std::vector<bool>& dest);
     static void Map8(std::string& strNumber, std::vector<bool>& dest);
     static void Map10(std::string& strNumber, std::vector<bool>& dest);
     static void Map16(std::string& strNumber, std::vector<bool>& dest);
 
+    template<typename TInteger>
+    static std::vector<bool> ToVectorBool(TInteger intNumber, State<0>);
+
+    template<typename TFloat>
+    static std::vector<bool> ToVectorBool(TFloat floatNumber, State<1>);
+
+    template<typename TCStr>
+    static std::vector<bool> ToVectorBool(TCStr cstrNumber, State<2>);
+
+    template<typename TOther>
+    static std::vector<bool> ToVectorBool(TOther other, FalseType);
+
 public:
     Number(char* cstrNumber, NumberType type = SignedInteger);
+
     Number(std::vector<bool>& bitString, NumberType type = SignedInteger);
     Number(std::vector<bool>&& bitString, NumberType type = SignedInteger);
+
+    template<typename TNumber>
+    Number(TNumber number);
+
     Number(const Number& number);
     Number(Number&& number);
 
@@ -150,10 +167,51 @@ Number::Number(std::vector<bool>& bitString, NumberType type/* = SignedInteger*/
 {
 }
 Number::Number(std::vector<bool>&& bitString, NumberType type/* = SignedInteger*/)
-    : _num(PerfectForward<std::vector<bool>>(bitString))
+    : _num(RvalueCast(bitString))
     , _type(type)
 {
 }
+
+template<typename TNumber>
+Number::Number(TNumber number)
+    : _num(RvalueCast(ToVectorBool(number, MultiState<TNumber, IsInteger, IsFloat, IsCString>::Result())))
+    , _type(IsInteger<TNumber>::Result::Value ? SignedInteger : Float)
+{
+}
+
+template<typename TInteger>
+static std::vector<bool> Number::ToVectorBool(TInteger intNumber, State<0>)
+{
+    //Integer
+    std::vector<bool> result(sizeof(TInteger) * 8);
+    for (int i = 0; i < sizeof(TInteger) * 8; i++)
+    {
+        result[i] = (intNumber >> i) & 0x1;
+    }
+    return RvalueCast(result);
+}
+
+template<typename TFloat>
+static std::vector<bool> Number::ToVectorBool(TFloat floatNumber, State<1>)
+{
+    //Float
+    static_assert(0, "Not Implement yet");
+}
+
+template<typename TCStr>
+static std::vector<bool> Number::ToVectorBool(TCStr cstrNumber, State<2>)
+{
+    //char*
+    return RvalueCast(Parse(cstrNumber));
+}
+
+
+template<typename TOther>
+static std::vector<bool> Number::ToVectorBool(TOther other, FalseType)
+{
+    static_assert(0, "Not a number.");
+}
+
 Number::Number(const Number& number)
     : _num(number._num)
     , _type(number._type)
@@ -165,7 +223,7 @@ Number::Number(Number&& number)
 {
 }
 
-std::vector<bool> Number::Parse(char* cstrNumber)
+std::vector<bool> Number::Parse(const char* cstrNumber)
 {
     std::vector<bool> result;
     std::string strNumber = cstrNumber;
@@ -498,7 +556,7 @@ Number Number::operator+(const Number& rhs)
         {
             result.insert(result.end(), 1, ci);
         }
-        else if(a.SignBit() == b.SignBit() && a.SignBit() != *(result.rbegin()))
+        else if (a.SignBit() == b.SignBit() && a.SignBit() != *(result.rbegin()))
         {
             result.insert(result.end(), 1, a.SignBit());
         }
