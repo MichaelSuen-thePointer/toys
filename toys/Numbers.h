@@ -174,7 +174,7 @@ Number::Number(std::vector<bool>&& bitString, NumberType type/* = SignedInteger*
 
 template<typename TNumber>
 Number::Number(TNumber number)
-    : _num(RvalueCast(ToVectorBool(number, MultiState<TNumber, IsInteger, IsFloat, IsCString>::Result())))
+    : _num(RvalueCast(ToVectorBool(number, MultiState<TNumber, IsInteger, IsFloat, PredOrFact<TypeEqFact<char*>::Get, TypeEqFact<const char*>::Get>::Get>::Result())))
     , _type(IsInteger<TNumber>::Result::Value ? SignedInteger : Float)
 {
 }

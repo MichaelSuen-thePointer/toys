@@ -13,6 +13,7 @@ struct PODType
     static const TPOD Value = V;
     using Type = TPOD;
     using Self = PODType<TPOD, V>;
+    //using Result = Self;
 };
 
 template<int VInt>
@@ -26,6 +27,21 @@ using Char = PODType<char, VChar>;
 
 using TrueType = Bool<true>;
 using FalseType = Bool<false>;
+
+template<class T>
+struct Not;
+
+template<>
+struct Not<TrueType>
+{
+    using Result = FalseType;
+};
+
+template<>
+struct Not<FalseType>
+{
+    using Result = TrueType;
+};
 
 template<typename TTest, typename TTrue, typename TFalse>
 struct If;
@@ -457,6 +473,14 @@ struct TypeEq<T, T>
     using Result = TrueType;
 };
 
+template<typename T1, typename T2>
+struct TypeNeq
+{
+    using Result = typename Not<
+        typename TypeEq<T1, T2>::Result
+    >::Result;
+};
+
 template<typename TEnum>
 struct EnumBase
 {
@@ -660,17 +684,10 @@ struct IsFloat<long double>
 };
 
 template<class T>
-struct TypeEqFactory
+struct TypeEqFact
 {
-private:
     template<class TTest>
-    struct IsImpl
-    {
-        using Result = typename TypeEq<T, TTest>::Result;
-    };
-public:
-    template<class TTest>
-    using Get = typename IsImpl<TTest>;
+    using Get = typename TypeEq<T, TTest>;
 };
 
 template<class T>
@@ -716,7 +733,6 @@ T&& PerfectForward(typename RemoveReference<T>::Type&& value) noexcept
     return (static_cast<T&&>(value));
 }
 
-
 template<int N>
 using State = Int<N>;
 
@@ -737,7 +753,7 @@ struct MultiStateImpl
 template<int N, class TStatement, template<class T> class TPred>
 struct MultiStateImpl<N, TStatement, TPred>
 {
-    using Result = typename If <
+    using Result = typename If<
         typename TPred<TStatement>::Result,
         State<N>,
         FalseType
@@ -748,6 +764,16 @@ template<class TStatement, template<class T> class... TPreds>
 struct MultiState
 {
     using Result = typename MultiStateImpl<0, TStatement, TPreds...>::Result;
+};
+
+template<template<class T> class... TPreds>
+struct PredOrFact
+{
+    template<class TStatement>
+    using Get = typename TypeNeq<
+        typename MultiState<TStatement, TPreds...>::Result,
+        FalseType
+    >;
 };
 
 struct POD
