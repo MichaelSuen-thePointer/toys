@@ -57,8 +57,6 @@ struct Add
     using Type = typename AddNum<ShowValue<typename NumberT1::Type>::Value, ShowValue<typename NumberT2::Type>::Value>::Type;
 };
 
-
-
 } //namespace number
 
 class ParseError: public std::runtime_error
@@ -109,7 +107,7 @@ protected:
     static void Map8(std::string& strNumber, std::vector<bool>& dest);
     static void Map10(std::string& strNumber, std::vector<bool>& dest);
     static void Map16(std::string& strNumber, std::vector<bool>& dest);
-
+    static void InvComp(std::vector<bool>& bitVec);
     template<typename TInteger>
     static std::vector<bool> ToVectorBool(TInteger intNumber, State<0>);
 
@@ -202,9 +200,13 @@ template<typename TCStr>
 static std::vector<bool> Number::ToVectorBool(TCStr cstrNumber, State<2>)
 {
     //char*
-    return RvalueCast(Parse(cstrNumber));
+    auto bitVec = Parse(cstrNumber);
+    if (cstrNumber[0] == '-')
+    {
+        InvComp(bitVec);
+    }
+    return bitVec;
 }
-
 
 template<typename TOther>
 static std::vector<bool> Number::ToVectorBool(TOther other, FalseType)
@@ -433,6 +435,19 @@ Number::Radix Number::Preprocess(std::string& strNumber)
     }
 }
 
+void Number::InvComp(std::vector<bool>& bitVec)
+{
+    bool metOne = false;
+    for (auto& bit : bitVec)
+    {
+        bit = bit ^ metOne;
+        if (bit == true && !metOne)
+        {
+            metOne = true;
+        }
+    }
+}
+
 void Number::SignedExpandTo(size_t size)
 {
     size_t oldSize = this->_num.size();
@@ -521,15 +536,7 @@ Number Number::operator+(void)
 Number Number::operator-(void)
 {
     Number result(*this);
-    bool metOne = false;
-    for (auto& bit : result._num)
-    {
-        bit = bit ^ metOne;
-        if (bit == true && !metOne)
-        {
-            metOne = true;
-        }
-    }
+    InvComp(result._num);
     return result;
 }
 
