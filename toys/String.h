@@ -352,6 +352,10 @@ public: //public member func
         {
             return IndexOf(value._buffer[value._start], startIndex, count);
         }
+        if (value._length < count)
+        {
+            return -1;
+        }
         size_t findStrLength = value._length;
         size_t length = _start + count;
         char* string = value._buffer + value._start;
@@ -435,6 +439,10 @@ public: //public member func
         if (value._length == 1)
         {
             return LastIndexOf(value._buffer[value._start], startIndex, count);
+        }
+        if (value._length < count)
+        {
+            return -1;
         }
         size_t findStrLength = value._length;
         size_t length = _start + count;
