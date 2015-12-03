@@ -345,19 +345,19 @@ public: //public member func
     {
         return IndexOf(ch, 0, _length);
     }
-    size_t IndexOf(const AnsiString& findStr, size_t startIndex, size_t count)
+    size_t IndexOf(const AnsiString& value, size_t startIndex, size_t count)
     {
         CHECK_ERROR(startIndex >= 0 && startIndex < _length && count > 0 && startIndex + count <= _length, "Index out of range");
-        if (findStr._length == 1)
+        if (value._length == 1)
         {
-            return IndexOf(findStr._buffer[findStr._start]);
+            return IndexOf(value._buffer[value._start], startIndex, count);
         }
-        size_t findStrLength = findStr._length;
+        size_t findStrLength = value._length;
         size_t length = _start + count;
-        char* string = findStr._buffer + findStr._start;
-        size_t* partialMatchTable = new size_t[findStrLength + 1];
+        char* string = value._buffer + value._start;
         size_t subStrOffset = 1;
         size_t partialLength = 0;
+        size_t* partialMatchTable = new size_t[findStrLength + 1];
         partialMatchTable++;
         partialMatchTable[-1] = -1;
         partialMatchTable[0] = 0;
@@ -365,7 +365,7 @@ public: //public member func
         {
             if (string[i] != string[i - subStrOffset])
             {
-                subStrOffset++;
+                subStrOffset = i;
                 partialLength = 0;
             }
             else
@@ -374,28 +374,23 @@ public: //public member func
             }
             partialMatchTable[i] = partialLength;
         }
-        size_t matchedLength;
+        /*matchedLength == i*/
         size_t index = _start + startIndex;
+        size_t indexMax = length - findStrLength + 1;
         size_t i;
-        for (i = 0, matchedLength = 0; i < findStrLength && index < length; i++)
+        for (i = 0; i < findStrLength && index < indexMax; i++)
         {
             if (_buffer[index + i] != string[i])
             {
-                int offset = matchedLength - partialMatchTable[i - 1];
+                int offset = i - partialMatchTable[i - 1];
                 index += offset;
                 i -= offset;
-                matchedLength -= offset - 1;
-            }
-            else
-            {
-                matchedLength++;
             }
         }
-        delete[] (partialMatchTable - 1);
-        if (i == findStrLength && index < length)
+        delete[](partialMatchTable - 1);
+        if (i == findStrLength)
         {
             return index;
-
         }
         else
         {
@@ -437,11 +432,67 @@ public: //public member func
     size_t LastIndexOf(const AnsiString& value, size_t startIndex, size_t count)
     {
         CHECK_ERROR(startIndex >= 0 && startIndex < _length && count > 0 && startIndex + count <= _length, "Index out of range");
-        throw Error("function not implemented yet", __LINE__);
+        if (value._length == 1)
+        {
+            return LastIndexOf(value._buffer[value._start], startIndex, count);
+        }
+        size_t findStrLength = value._length;
+        size_t length = _start + count;
+        char* string = value._buffer + value._start;
+        size_t subStrOffset = 1;
+        size_t partialLength = 0;
+        size_t* partialMatchTable = new size_t[findStrLength + 1];
+        partialMatchTable[findStrLength] = -1;
+        partialMatchTable[findStrLength - 1] = 0;
+        for (size_t i = findStrLength - 2; i != (size_t)-1; i--)
+        {
+            if (string[i] != string[i + subStrOffset])
+            {
+                subStrOffset = findStrLength - i;
+                partialLength = 0;
+            }
+            else
+            {
+                partialLength++;
+            }
+            partialMatchTable[i] = partialLength;
+        }
+        /*matchedLength == findStrLength - 1 - i*/
+        size_t index = _start + startIndex + count - 1;
+        size_t indexMin = _start + startIndex + findStrLength - 1;
+        size_t i;
+        for (i = findStrLength - 1; i != (size_t)-1 && index >= indexMin; i--)
+        {
+            if (_buffer[index - (findStrLength - 1 - i)] != string[i])
+            {
+                int offset = findStrLength - 1 - i - partialMatchTable[i + 1];
+                index -= offset;
+                i += offset;
+            }
+        }
+        delete[] partialMatchTable;
+        if (i == (size_t)-1)
+        {
+            return index - findStrLength + 1;
+        }
+        else
+        {
+            return -1;
+        }
     }
+    size_t LastIndexOf(const AnsiString& value, size_t startIndex)
+    {
+        return LastIndexOf(value, startIndex, _length);
+    }
+    size_t LastIndexOf(const AnsiString& value)
+    {
+        return LastIndexOf(value, 0, _length);
+    }
+
 
 };
 
 }
+
 
 #endif // !STRING_H

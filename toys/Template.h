@@ -201,15 +201,21 @@ struct Change<A<Args...>, B>
     using Result = B<Args...>;
 };
 
-template<typename T1, typename T2>
-struct ListConnect
-{};
+template<typename... T>
+struct ListConnect;
+
 
 template<typename... TArgs1, typename... TArgs2>
 struct ListConnect<List<TArgs1...>, List<TArgs2...>>
 {
     using Result = typename List<TArgs1..., TArgs2...>;
 };
+template<typename... TArgs1, typename... TArgs2, typename... TArgs3>
+struct ListConnect<List<TArgs1...>, List<TArgs2...>, List<TArgs3...>>
+{
+    using Result = typename List<TArgs1..., TArgs2..., TArgs3...>;
+};
+
 template<typename T>
 struct ListReverse;
 
@@ -379,6 +385,51 @@ struct Range
         >::Result
     >::Result;
 };
+
+template<typename TVal>
+struct ListSort;
+
+template<>
+struct ListSort<List<>>
+{
+    using Result = List<>;
+};
+
+template<typename TVal>
+struct ListSort<List<TVal>>
+{
+    using Result = List<TVal>;
+};
+
+template<typename... TArgs>
+struct ListSort<List<TArgs...>>
+{
+    using Pivot = typename ListGet<List<TArgs...>>::First;
+    template<typename TVal>
+    struct FilterLt
+    {
+        using Result = typename Lt<TVal, Pivot>::Result;
+    };
+    template<typename TVal>
+    struct FilterEq
+    {
+        using Result = typename Eq<TVal, Pivot>::Result;
+    };
+    template<typename TVal>
+    struct FilterGt
+    {
+        using Result = typename Gt<TVal, Pivot>::Result;
+    };
+    using Left = typename ListFilter<FilterLt, List<TArgs...>>::Result;
+    using Middle = typename ListFilter<FilterEq, List<TArgs...>>::Result;
+    using Right = typename ListFilter<FilterGt, List<TArgs...>>::Result;
+    using SortedLeft = typename ListSort<Left>::Result;
+    using SortedRight = typename ListSort<Right>::Result;
+    using Result = typename ListConnect<
+        typename ListConnect<SortedLeft, Middle, SortedRight>::Result
+    >::Result;
+};
+
 
 template<typename T, T V, typename... TRest>
 void PrintList(List<PODType<T, V>, TRest...>)
@@ -786,7 +837,6 @@ struct IsPOD: Bool<__is_pod(T)>
 {
     using Result = typename If<Self, POD, NotPOD>::Result;
 };
-
 
 
 /*SFINAE*/

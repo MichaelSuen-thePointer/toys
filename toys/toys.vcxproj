@@ -157,6 +157,7 @@
     <ClInclude Include="List2.h" />
     <ClInclude Include="Numbers.h" />
     <ClInclude Include="Pointer.h" />
+    <ClInclude Include="Property.h" />
     <ClInclude Include="String.h" />
     <ClInclude Include="StringUtils.h" />
     <ClInclude Include="Template.h" />

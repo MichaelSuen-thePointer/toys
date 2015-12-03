@@ -60,6 +60,7 @@ std::string _StringFormat(std::string elem)
     return elem;
 }
 
+
 }
 
 #endif // !STRING_UTILS
