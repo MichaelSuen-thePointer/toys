@@ -1,20 +1,35 @@
-#include "Property.h"
-using namespace pl;
-using namespace tml;
+#include "Function.h"
 
-class PropertyTest
+using namespace pl;
+
+void function(void)
 {
-public:
-    Property<int> length = {
-        10,                                  //value
-        [](const int& _value) {return 10; }, //getter
-        DefaultSetter<int>                   //setter
-    };
+    
+}
+
+struct callable
+{
+    void operator()(void)
+    {
+
+    }
 };
 
+struct test
+{
+    void memfunc(void)
+    {
+
+    }
+};
 int main()
 {
-    PropertyTest test;
-    test.length = 10;
-    int a = test.length;
+    test a;
+    callable c;
+    auto f1 = Callable<void(void)>([]() {});
+    auto f2 = Callable<void(void)>(&a, &test::memfunc);
+    auto f3 = Callable<void(void)>(c);
+    f1();
+    f2();
+    f3();
 }

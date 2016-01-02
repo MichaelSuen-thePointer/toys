@@ -150,6 +150,7 @@
     <ClInclude Include="Allocator.h" />
     <ClInclude Include="Base.h" />
     <ClInclude Include="BaseType.h" />
+    <ClInclude Include="callable.h" />
     <ClInclude Include="CPS.h" />
     <ClInclude Include="Event.h" />
     <ClInclude Include="Function.h" />

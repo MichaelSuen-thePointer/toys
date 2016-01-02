@@ -20,10 +20,10 @@ protected:
     NotCopyable() {}
     ~NotCopyable() {}
 private:
-    NotCopyable(const NotCopyable&) {}
-    NotCopyable(NotCopyable&&) {}
-    NotCopyable& operator==(const NotCopyable&) {}
-    NotCopyable& operator==(NotCopyable&&) {}
+    NotCopyable(const NotCopyable&) = delete;
+    NotCopyable(NotCopyable&&) = delete;
+    NotCopyable& operator=(const NotCopyable&) = delete;
+    NotCopyable& operator=(NotCopyable&&) = delete;
 };
 
 class Interface: NotCopyable
