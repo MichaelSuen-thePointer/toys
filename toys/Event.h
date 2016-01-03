@@ -3,70 +3,30 @@
 #define EVENT_H
 
 #include "Base.h"
-#include <functional>
-#include <memory>
+#include "Pointer.h"
+#include "Function.h"
 #include <vector>
+
 namespace pl
 {
-template<typename T>
-class Event;
-
-template<typename T>
-class EventHandler;
-
-
 
 template<typename... TArgs>
-class Event<void(TArgs...)>: public Object, private NotCopyable
-{
-public:
-    class EventHandler: Object
-    {
-    public:
-        template<typename T>
-        std::shared_ptr<EventHandler> Get(void(*handler)(TArgs...))
-        {
-            return std::make_shared<StaticFuncHandler<TArgs...>>(handler);
-        }
-        virtual void operator()(TArgs...) = 0;
-    };
-    class StaticFuncHandler : EventHandler
-    {
-    protected:
-        std::function<void(TArgs...)> function;
-    public:
-        StaticFuncHandler(const std::function<void(TArgs...)>& handler)
-            : function(handler)
-        {
-        }
-        StaticFuncHandler(void(*handler)(TArgs...))
-            : function(handler)
-        {
-        }
-        void operator()(TArgs... args) const override
-        {
-            function(std::forward<TArgs>(args)...);
-        }
-    };
-    class MemberFuncHandler: EventHandler<TArgs...>
-    {
-    protected:
-        
-    public:
-        template<typename T>
-        Handler(T* sender, void(T::*function)(TArgs...))
-        {
+using EventHandler = Callable<void(TArgs...)>;
 
-        }
-    };
+template<typename... TArgs>
+class Event: public Object, private NotCopyable
+{
 protected:
-    std::vector<Handler> handlers;
+    std::vector<Callable<void(TArgs...)>> handlers;
 public:
+    using Handler = Callable<void(TArgs...)>;
+
+    friend class Handler;
+
     Event()
         : handlers()
     {
     }
-
     Event& operator+=(Handler& handler)
     {
         if (std::find(handlers.begin(), handlers.end(), handler) == handlers.end())
@@ -84,11 +44,11 @@ public:
         }
         return *this;
     }
-    void operator()(TArgs... args) const
+    void operator()(TArgs&&... args) const
     {
-        for (auto& handler : handlers)
+        for (auto&& handler : handlers)
         {
-            handler(std::forward<TArgs>(args)...);
+            handler(PerfectForward<TArgs>(args)...);
         }
     }
 };

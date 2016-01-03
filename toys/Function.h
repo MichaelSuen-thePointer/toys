@@ -103,7 +103,7 @@ public:
 	{
 	}
 
-	TRet operator()(TArgs&&... args)
+	TRet operator()(TArgs&&... args) const
 	{
 		return (*_invoker)(PerfectForward<TArgs>(args)...);
 	}
@@ -112,6 +112,11 @@ public:
 	{
 		return _invoker == callable._invoker;
 	}
+
+    bool operator!=(const Callable& callable)
+    {
+        return _invoker != callable._invoker;
+    }
 };
 
 }
