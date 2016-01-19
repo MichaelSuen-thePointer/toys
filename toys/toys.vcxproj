@@ -90,6 +90,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>E:\boost_1_59_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -148,12 +149,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Allocator.h" />
+    <ClInclude Include="any.h" />
+    <ClInclude Include="anylink.h" />
     <ClInclude Include="Base.h" />
     <ClInclude Include="BaseType.h" />
     <ClInclude Include="callable.h" />
     <ClInclude Include="CPS.h" />
     <ClInclude Include="Event.h" />
+    <ClInclude Include="Exception.h" />
     <ClInclude Include="Function.h" />
+    <ClInclude Include="KeySlot.h" />
     <ClInclude Include="List.h" />
     <ClInclude Include="List2.h" />
     <ClInclude Include="Numbers.h" />

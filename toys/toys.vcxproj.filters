@@ -63,6 +63,18 @@
     <ClInclude Include="callable.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="anylink.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="any.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="KeySlot.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Exception.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

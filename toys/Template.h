@@ -835,7 +835,7 @@ struct NotPOD
 template<typename T>
 struct IsPOD: Bool<__is_pod(T)>
 {
-    using Result = typename If<Self, POD, NotPOD>::Result;
+    using Result = typename If<Self, TrueType, FalseType>::Result;
 };
 
 

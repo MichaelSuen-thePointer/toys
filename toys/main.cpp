@@ -1,40 +1,79 @@
-#include <iostream>
-#include "Event.h"
+#include <vld.h>
+#include "List.h"
+#include <vector>
 
 using namespace pl;
-using namespace std;
-void function(void)
-{
-    cout << "function" << endl;
-}
+using namespace pl::container;
 
-struct callable
+struct obj
 {
-    void operator()(void)
+    int placeholder;
+};
+struct no_default_ctor
+{
+    int placeholder;
+    no_default_ctor() = delete;
+    no_default_ctor(int a)
     {
-        cout << "callable" << endl;
+        placeholder = a;
+    }
+};
+struct ctorException
+{
+public:
+    static int count;
+    int* ptr;
+    ctorException()
+    {
+        ptr = new int;
+        count++;
+        if (count == 10)
+        {
+            delete ptr;
+            count = 0;
+            throw "here boom";
+        }
+    }
+    ctorException(const ctorException& v)
+    {
+        ptr = new int;
+        count++;
+        if (count == 10)
+        {
+            delete ptr;
+            count = 0;
+            throw "here boom";
+        }
+    }
+    ~ctorException()
+    {
+        delete ptr;
     }
 };
 
-struct test
+int ctorException::count = 0;
+
+template<>
+struct IsPOD<obj>
 {
-    void memfunc(void)
-    {
-        cout << "memfunc" << endl;
-    }
+    using Result = FalseType;
 };
-using FooEvent = Event<>;
+
+template<>
+struct IsPOD<ctorException>
+{
+    using Result = FalseType;
+};
+
+
 int main()
 {
-    FooEvent OnFooEvent;
-    callable functor;
-    test testa;
+    std::vector<no_default_ctor> vector(10, no_default_ctor(10));
+    vector.push_back(no_default_ctor(11));
+    vector.push_back(no_default_ctor(11));
+    vector.push_back(no_default_ctor(11));
+    vector.push_back(no_default_ctor(11));
+    vector.push_back(no_default_ctor(11));
+    vector.push_back(no_default_ctor(11));
 
-    ios::sync_with_stdio(false);
-
-    OnFooEvent += FooEvent::Handler(function);
-    OnFooEvent += FooEvent::Handler(functor);
-    OnFooEvent += EventHandler<>(&testa, &test::memfunc);
-
-    OnFooEvent();
 }

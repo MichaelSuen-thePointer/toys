@@ -7,9 +7,14 @@
 
 namespace pl
 {
-struct Int32: Object
+class Int32: Object
 {
-private:
+public:
+    friend Int32 operator+(const Int32&, const Int32&);
+    friend Int32 operator-(const Int32&, const Int32&);
+    friend Int32 operator*(const Int32&, const Int32&);
+    friend Int32 operator/(const Int32&, const Int32&);
+protected:
     __int32 _value;
 public:
     Int32(int value) noexcept
@@ -20,7 +25,7 @@ public:
         : _value(value._value)
     {
     }
-    operator int()
+    explicit operator int() noexcept
     {
         return _value;
     }
@@ -28,8 +33,49 @@ public:
     {
         return 0xEFFFFFFF;
     }
+    static constexpr int MinValue() noexcept
+    {
+        return 0x80000000;
+    }
 };
 
+Int32 operator+(const Int32& a, const Int32& b)
+{
+    return Int32(a._value + b._value);
+}
+Int32 operator-(const Int32& a, const Int32& b)
+{
+    return Int32(a._value - b._value);
+}
+Int32 operator*(const Int32& a, const Int32& b)
+{
+    return Int32(a._value * b._value);
+}
+Int32 operator/(const Int32& a, const Int32& b)
+{
+    return Int32(a._value / b._value);
+}
+
+class Float32: public Object
+{
+protected:
+    double _value;
+public:
+    Float32(double value) noexcept
+        : _value(value)
+    {
+    }
+    Float32(const Float32& value) noexcept
+        : _value(value._value)
+    {
+    }
+    explicit operator double() noexcept
+    {
+        return _value;
+    }
+
+
+};
 
 }
 #endif // !BASE_TYPE_H
