@@ -4,7 +4,7 @@
 
 #include "Base.h"
 #include "Template.h"
-#include <string.h>
+#include <memory.h>
 #include <new>
 namespace pl
 {
@@ -16,10 +16,15 @@ class List: public Object
 {
 protected:
     T* begin;
-    T* value_end;
-    T* real_end;
+    T* back;
+    T* end;
 
-    static void InternalDefaultConstruct(T* dest, size_t count, FalseType)
+    static void InternalDefaultConstruct(T* dest, size_t count)
+    {
+        InternalDefaultConstructT(dest, count, IsPOD<T>::Result());
+    }
+
+    static void InternalDefaultConstructT(T* dest, size_t count, FalseType)
     {
         CHECK_ERROR(dest, "Destination pointer illegal.");
         CHECK_ERROR(count, "Count must be greater than 0.");
@@ -36,19 +41,20 @@ protected:
             i--;
             while (i != -1)
             {
-                dest[i].~T();
+                (dest + i)->~T();
                 i--;
             }
             throw;
         }
     }
-    static void InternalDefaultConstruct(T* dest, size_t count, TrueType)
+    static void InternalDefaultConstructT(T* dest, size_t count, TrueType)
     {
         CHECK_ERROR(dest, "Destination pointer illegal.");
         CHECK_ERROR(count, "Count must be greater than 0.");
 
         memset(dest, 0, count);
     }
+
     static void InternalCopyConstruct(T* dest, size_t count, const T& value)
     {
         CHECK_ERROR(dest, "Destination pointer illegal.");
@@ -66,13 +72,19 @@ protected:
             i--;
             while (i != -1)
             {
-                dest[i].~T();
+                (dest + i)->~T();
                 i--;
             }
             throw;
         }
     }
-    static void InternalCopyConstruct(T* dest, T* src, size_t count, TrueType)
+
+    static void InternalCopyConstruct(T* dest, const T* src, size_t count)
+    {
+        InternalCopyConstructT(dest, src, count, IsPOD<T>::Result());
+    }
+
+    static void InternalCopyConstructT(T* dest, const T* src, size_t count, TrueType)
     {
         CHECK_ERROR(dest, "Destination pointer illegal.");
         CHECK_ERROR(src, "Source pointer illegal.");
@@ -80,7 +92,7 @@ protected:
 
         memcpy(dest, src, count);
     }
-    static void InternalCopyConstruct(T* dest, T* src, size_t count, FalseType)
+    static void InternalCopyConstructT(T* dest, const T* src, size_t count, FalseType)
     {
         CHECK_ERROR(dest, "Destination pointer illegal.");
         CHECK_ERROR(src, "Source pointer illegal.");
@@ -99,21 +111,26 @@ protected:
             i--;
             while (i != -1)
             {
-                dest[i].~T();
+                (dest + i)->~T();
                 i--;
             }
             throw;
         }
     }
 
-    static void InternalCopy(T* dest, T* src, size_t count, TrueType)
+    static void InternalCopy(T* dest, const T* src, size_t count)
+    {
+        InternalCopyT(dest, src, count, IsPOD<T>::Result());
+    }
+
+    static void InternalCopyT(T* dest, const T* src, size_t count, TrueType)
     {
         CHECK_ERROR(dest, "Destination pointer illegal.");
         CHECK_ERROR(src, "Source pointer illegal.");
         CHECK_ERROR(count, "Element count illegal.");
         memcpy(dest, src, count);
     }
-    static void InternalCopy(T* dest, T* src, size_t count, FalseType)
+    static void InternalCopyT(T* dest, const T* src, size_t count, FalseType)
     {
         CHECK_ERROR(dest, "Destination pointer illegal.");
         CHECK_ERROR(src, "Source pointer illegal.");
@@ -129,7 +146,12 @@ protected:
         CHECK_ERROR(count, "List size must be greater than 0.");
         return static_cast<T*>((T*)(new byte[sizeof(T) * count]));
     }
-    static void InternalMove(T* dest, T* src, size_t count, TrueType)
+    static void InternalMove(T* dest, const T* src, size_t count)
+    {
+        InternalMoveT(dest, src, count, IsPOD<T>::Result());
+    }
+
+    static void InternalMoveT(T* dest, const T* src, size_t count, FalseType)
     {
         if (src < dest)
         {
@@ -149,14 +171,19 @@ protected:
             }
         }
     }
-
+    static void InternalMoveT(T* dest, const T* src, size_t count, TrueType)
+    {
+        memmove(dest, src, sizeof(T) * count);
+    }
     void AdjustSpace(size_t newSize)
     {
         CHECK_ERROR(newSize, "New size must be greater than 0.");
-        T* newMem = GetRawSpace(size_t newSize);
+        T* newMem = GetRawSpace(newSize);
+        CHECK_ERROR(back - begin, "Member back is smaller than begin.");
+        size_t newCount = Min(size_t(back - begin), newSize);
         try
         {
-            InternalCopy(newMem, begin, Min(real_end - begin, newSize), IsPOD<T>::Result());
+            InternalCopyConstruct(newMem, begin, newCount);
         }
         catch (...)
         {
@@ -164,20 +191,36 @@ protected:
             throw;
         }
 
-        value_end = newMem + value_end - begin;
-        real_tail = newMem + Min(real_tail - begin, newSize);
+        InternalDestruct(begin, back - begin);
+        back = newMem + newCount;
         delete[](char*)begin;
         begin = newMem;
-        real_end = newMem + newSize;
+        end = newMem + newSize;
+    }
+    
+    static void InternalDestruct(T* buffer, size_t count)
+    {
+        InternalDestructT(buffer, count, IsPOD<T>::Result());
     }
 
-    void CleanUpMess()
+    static void InternalDestructT(T* buffer, size_t count, TrueType)
+    {
+    }
+
+    static void InternalDestructT(T* buffer, size_t count, FalseType)
+    {
+        for (size_t i = 0; i < count; i++)
+        {
+            (buffer + i)->~T();
+        }
+    }
+
+    void FreeMemory()
     {
         delete[](char*)begin;
         begin = nullptr;
-        value_end = nullptr;
-        real_tail = nullptr;
-        real_end = nullptr;
+        back = nullptr;
+        end = nullptr;
     }
 public:
     List()
@@ -187,24 +230,24 @@ public:
 
     List(size_t count)
         : begin(GetRawSpace(count))
-        , value_end(begin + count)
-        , real_end(begin)
+        , back(begin + count)
+        , end(begin)
     {
         try
         {
-            InternalDefaultConstruct(begin, count, IsPOD<T>::Result());
+            InternalDefaultConstruct(begin, count);
         }
         catch (...)
         {
-            CleanUpMess();
+            FreeMemory();
             throw;
         }
     }
 
     List(size_t count, const T& value)
         : begin(GetRawSpace(count))
-        , value_end(begin + count)
-        , real_end(begin)
+        , back(begin + count)
+        , end(begin)
     {
         try
         {
@@ -212,81 +255,142 @@ public:
         }
         catch (...)
         {
-            CleanUpMess();
+            FreeMemory();
             throw;
         }
     }
 
-    List(T* begin, T* end)
-        : begin(GetRawSpace(end - begin))
-        , value_end(begin + (end - begin))
-        , real_end(begin)
+    List(T* first, T* last)
+        : begin(GetRawSpace(last - first))
+        , back(begin + (last - first))
+        , end(begin)
     {
         try
         {
-            InternalCopyConstruct(begin, begin, end - begin, IsPOD<T>::Result());
+            InternalCopyConstruct(begin, first, last - first);
         }
         catch (...)
         {
-            CleanUpMess();
+            FreeMemory();
             throw;
         }
     }
     List(const List& list)
-        : begin(GetRawSpace(list.real_end - list.begin))
-        , value_end(begin + (real_end - begin))
-        , real_end(begin)
+        : begin(GetRawSpace(list.end - list.begin))
+        , back(begin + (end - begin))
+        , end(begin)
     {
         try
         {
-            InternalCopyConstruct(begin, list.begin, list.value_end - list.begin, IsPOD<T>::Result());
+            InternalCopyConstruct(begin, list.begin, list.back - list.begin);
         }
         catch (...)
         {
-            CleanUpMess();
+            FreeMemory();
             throw;
         }
     }
     List(List&& list)
         : begin(list.begin)
-        , value_end(list.value_end)
-        , real_end(list.real_end)
+        , back(list.back)
+        , end(list.end)
     {
         list.begin = nullptr;
-        list.value_end = nullptr;
-        list.real_end = nullptr;
+        list.back = nullptr;
+        list.end = nullptr;
     }
 
     size_t Count() const
     {
-        return value_end - begin;
+        return back - begin;
     }
 
     size_t Capacity() const
     {
-        return real_end - begin;
+        return end - begin;
     }
 
     void AddBack(const T& value)
     {
-
+        if (back == end)
+        {
+            AdjustSpace(static_cast<size_t>((end - begin) * 1.2) + 1);
+        }
+        new (back) T(value);
+        back++;
     }
 
     void AddBack(T&& value)
     {
-
+        if (back != end)
+        {
+            AdjustSpace(static_cast<size_t>((end - begin) * 1.2) + 1);
+        }
+        new (back) T(RvalueCast(value));
+        back++;
     }
+
     void RemoveBack()
     {
-        CHECK_ERROR(value_end != begin, "List is empty.");
-        value_end--;
+        CHECK_ERROR(back != begin, "List is empty.");
+        back--;
+        back->~T();
+    }
+
+    void Insert(size_t place, const T* first, const T* last)
+    {
+        CHECK_ERROR(begin + place <= back, "Parameter place is invalid.");
+        CHECK_ERROR(first && last && first <= last, "Range invalid.");
+
+        size_t insertCount = last - first;
+        if (insertCount + back > end)
+        {
+            AdjustSpace(insertCount + Count());
+        }
+        InternalMove(begin + place + insertCount, begin + place, Count() - place);
+        InternalDestruct(begin + place, Count() - place);
+        InternalCopyConstruct(begin + place, first, insertCount);
+    }
+
+    void Insert(size_t place, size_t count, const T& value)
+    {
+        if (end - back < count)
+        {
+            AdjustSpace(end - begin + count);
+        }
+        InternalMove(begin + place + count, begin + place, count);
+        InternalDestruct(begin + place, count);
+        InternalCopyConstruct(begin + place, count, value);
+    }
+
+    void Insert(size_t place, const T& value)
+    {
+        if (end - back < 1)
+        {
+            AdjustSpace(end - begin + 1);
+        }
+        InternalMove(begin + place + 1, begin + place, 1);
+        InternalDestruct(begin + place, 1);
+        new (begin + place) T(value);
+    }
+
+    void Insert(size_t place, T&& value)
+    {
+        if (end - back < 1)
+        {
+            AdjustSpace(end - begin + 1);
+        }
+        InternalMove(begin + place + 1, begin + place, 1);
+        InternalDestruct(begin + place, 1);
+        new (begin + place) T(RvalueCast(value));
     }
 
     T& operator[](size_t index)
     {
         return begin[index];
     }
-    const T& operator[](size_t index)
+
+    const T& operator[](size_t index) const
     {
         return begin[index];
     }
@@ -295,13 +399,8 @@ public:
     {
         if (begin)
         {
-            size_t i = value_end - begin - 1;
-            while (i != -1)
-            {
-                begin[i].~T();
-                i--;
-            }
-            CleanUpMess();
+            InternalDestruct(begin, back - begin);
+            FreeMemory();
         }
     }
 };

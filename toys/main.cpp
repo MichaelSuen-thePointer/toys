@@ -1,6 +1,5 @@
 #include <vld.h>
 #include "List.h"
-#include <vector>
 
 using namespace pl;
 using namespace pl::container;
@@ -68,12 +67,15 @@ struct IsPOD<ctorException>
 
 int main()
 {
-    std::vector<no_default_ctor> vector(10, no_default_ctor(10));
-    vector.push_back(no_default_ctor(11));
-    vector.push_back(no_default_ctor(11));
-    vector.push_back(no_default_ctor(11));
-    vector.push_back(no_default_ctor(11));
-    vector.push_back(no_default_ctor(11));
-    vector.push_back(no_default_ctor(11));
+    obj objarray[50];
+    List<obj> objList(5);
+
+    objList.Insert(3, objarray, objarray + 30);
+    
+    objList.Insert(4, obj());
+    objList.Insert(4, objarray[0]);
+    objList.AddBack(objarray[1]);
+    objList.AddBack(obj());
+    objList.RemoveBack();
 
 }
