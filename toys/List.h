@@ -197,7 +197,7 @@ protected:
         begin = newMem;
         end = newMem + newSize;
     }
-    
+
     static void InternalDestruct(T* buffer, size_t count)
     {
         InternalDestructT(buffer, count, IsPOD<T>::Result());
@@ -231,7 +231,7 @@ public:
     List(size_t count)
         : begin(GetRawSpace(count))
         , back(begin + count)
-        , end(begin)
+        , end(begin + count)
     {
         try
         {
@@ -247,7 +247,7 @@ public:
     List(size_t count, const T& value)
         : begin(GetRawSpace(count))
         , back(begin + count)
-        , end(begin)
+        , end(begin + count)
     {
         try
         {
@@ -263,7 +263,7 @@ public:
     List(T* first, T* last)
         : begin(GetRawSpace(last - first))
         , back(begin + (last - first))
-        , end(begin)
+        , end(begin + last - first)
     {
         try
         {
@@ -278,7 +278,7 @@ public:
     List(const List& list)
         : begin(GetRawSpace(list.end - list.begin))
         , back(begin + (end - begin))
-        , end(begin)
+        , end(begin + list.Capacity())
     {
         try
         {
@@ -314,7 +314,8 @@ public:
     {
         if (back == end)
         {
-            AdjustSpace(static_cast<size_t>((end - begin) * 1.2) + 1);
+
+            AdjustSpace(Capacity() + Capacity() / 5 + 1);
         }
         new (back) T(value);
         back++;
@@ -322,9 +323,9 @@ public:
 
     void AddBack(T&& value)
     {
-        if (back != end)
+        if (back == end)
         {
-            AdjustSpace(static_cast<size_t>((end - begin) * 1.2) + 1);
+            AdjustSpace(Capacity() + Capacity() / 5 + 1);
         }
         new (back) T(RvalueCast(value));
         back++;
