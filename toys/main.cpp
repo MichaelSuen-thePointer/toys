@@ -54,25 +54,37 @@ public:
 };
 struct random_exception
 {
+    static int count;
     int placeholder;
+    int* mem;
     void rand_boom()
     {
+        
         double value = rand() / (double)RAND_MAX;
         if (value < 0.01)
         {
-            throw value;
+            throw "boom";
         }
-        else
+        
+    }
+    ~random_exception()
+    {
+        placeholder = -placeholder;
+        if (mem)
         {
-            std::cout << value << "--" << std::endl;
+            delete mem;
         }
+        mem = nullptr;
     }
     random_exception(int v)
     {
         placeholder = v;
+        mem = new int;
     }
     random_exception()
     {
+        placeholder = count++;
+        mem = new int;
         //rand_boom();
     }
     random_exception(const random_exception& v)
@@ -81,6 +93,7 @@ struct random_exception
         {
             rand_boom();
         }
+        mem = new int;
         placeholder = v.placeholder;
     }
     random_exception(random_exception&& v)
@@ -89,6 +102,8 @@ struct random_exception
         {
             rand_boom();
         }
+        mem = v.mem;
+        v.mem = nullptr;
         placeholder = v.placeholder;
     }
     random_exception& operator=(const random_exception& v)
@@ -98,6 +113,8 @@ struct random_exception
             rand_boom();
         }
         placeholder = v.placeholder;
+        mem = new int;
+
         return *this;
     }
     random_exception& operator=(random_exception&& v)
@@ -107,9 +124,13 @@ struct random_exception
             rand_boom();
         }
         placeholder = v.placeholder;
+        mem = v.mem;
+        v.mem = nullptr;
+
         return *this;
     }
 };
+int random_exception::count = 0;
 int ctorException::count = 0;
 
 template<>
@@ -153,9 +174,7 @@ int main()
     }
     catch (double v)
     {
-        std::cout << list.Count() << ' ' << list.Capacity() << std::endl;
-
-        std::cout << "boom!!!!" << v << std::endl;
+        std::cout << "boom" << v <<std::endl;
     }
     std::cin.get();
 }

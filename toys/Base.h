@@ -65,7 +65,7 @@ inline T Min(const T& left, const T& right)
 
 
 
-#define CHECK_ERROR(cond, msg) do{if(!(cond)) throw Error(msg, __LINE__);}while(0)
+#define CHECK_ERROR(cond, msg) do{if(!(cond)) throw Error((msg), __LINE__);}while(0)
 #define FAST_FAIL do {throw Error("Fast fail called.", __LINE__);}while(0)
 #define FAIL(message) do {throw Error(message, __LINE__);}while(0)
 #else

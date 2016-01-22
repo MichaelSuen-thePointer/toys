@@ -47,12 +47,13 @@ protected:
             throw;
         }
     }
+
     static void InternalDefaultConstructT(T* dest, size_t count, TrueType)
     {
         CHECK_ERROR(dest, "Destination pointer illegal.");
         CHECK_ERROR(count, "Count must be greater than 0.");
 
-        memset(dest, 0, count);
+        memset(dest, 0, sizeof(T) * count);
     }
 
     static void InternalCopyConstruct(T* dest, size_t count, const T& value)
@@ -79,6 +80,45 @@ protected:
         }
     }
 
+    static void InternalMoveAssignment(T* dest, const T* src, size_t count)
+    {
+
+        CHECK_ERROR(dest, "Destination pointer illegal.");
+        CHECK_ERROR(src, "Source pointer illegal.");
+        CHECK_ERROR(count, "Element count illegal.");
+
+        for (size_t i = 0; i < count; i++)
+        {
+            dest[i] = RvalueCast(src[i]);
+        }
+    }
+
+    static void InternalCopyAssignment(T* dest, const T* src, size_t count)
+    {
+        InternalCopyAssignmentT(dest, src, count, IsPOD<T>::Result());
+    }
+
+    static void InternalCopyAssignmentT(T* dest, const T* src, size_t count, TrueType)
+    {
+        CHECK_ERROR(dest, "Destination pointer illegal.");
+        CHECK_ERROR(src, "Source pointer illegal.");
+        CHECK_ERROR(count, "Element count illegal.");
+
+        memcpy(dest, src, sizeof(T) * count);
+    }
+
+    static void InternalCopyAssignmentT(T* dest, const T* src, size_t count, FalseType)
+    {
+        CHECK_ERROR(dest, "Destination pointer illegal.");
+        CHECK_ERROR(src, "Source pointer illegal.");
+        CHECK_ERROR(count, "Element count illegal.");
+
+        for (size_t i = 0; i < count; i++)
+        {
+            dest[i] = src[i];
+        }
+    }
+
     static void InternalCopyConstruct(T* dest, const T* src, size_t count)
     {
         InternalCopyConstructT(dest, src, count, IsPOD<T>::Result());
@@ -90,8 +130,9 @@ protected:
         CHECK_ERROR(src, "Source pointer illegal.");
         CHECK_ERROR(count, "Element count illegal.");
 
-        memcpy(dest, src, count);
+        memcpy(dest, src, sizeof(T) * count);
     }
+
     static void InternalCopyConstructT(T* dest, const T* src, size_t count, FalseType)
     {
         CHECK_ERROR(dest, "Destination pointer illegal.");
@@ -118,6 +159,61 @@ protected:
         }
     }
 
+    void InternalMoveConstruct(T* dest, T* src, size_t count)
+    {
+        InternalMoveConstructT(dest, src, count, IsPOD<T>::Result());
+    }
+
+    void InternalMoveConstructT(T* dest, T* src, size_t count, TrueType)
+    {
+        CHECK_ERROR(dest, "Destination pointer illegal.");
+        CHECK_ERROR(src, "Source pointer illegal.");
+        CHECK_ERROR(count >= 0, "Element count illegal.");
+
+        memcpy(dest, src, sizeof(T) * count);
+    }
+
+    void InternalMoveConstructT(T* dest, T* src, size_t count, FalseType)
+    {
+        CHECK_ERROR(dest, "Destination pointer illegal.");
+        CHECK_ERROR(src, "Source pointer illegal.");
+        CHECK_ERROR(count >= 0, "Element count illegal.");
+
+        size_t i;
+        try
+        {
+            for (i = 0; i < count; i++)
+            {
+                new (dest + i) T(RvalueCast(src[i]));
+            }
+        }
+        catch (...)
+        {
+            i--;
+            while (i != -1)
+            {
+                (dest + i)->~T();
+                i--;
+            }
+            throw;
+        }
+    }
+
+    void InternalConstructAt(T* place, const T& value)
+    {
+        new (place) T(value);
+    }
+
+    void InternalConstructAt(T* place, T&& value)
+    {
+        new (place) T(RvalueCast(value));
+    }
+
+    void InternalDestructAt(T* place)
+    {
+        place->~T();
+    }
+
     static void InternalCopy(T* dest, const T* src, size_t count)
     {
         InternalCopyT(dest, src, count, IsPOD<T>::Result());
@@ -130,6 +226,7 @@ protected:
         CHECK_ERROR(count, "Element count illegal.");
         memcpy(dest, src, count);
     }
+
     static void InternalCopyT(T* dest, const T* src, size_t count, FalseType)
     {
         CHECK_ERROR(dest, "Destination pointer illegal.");
@@ -141,59 +238,121 @@ protected:
             dest[i] = src[i];
         }
     }
+
     static T* GetRawSpace(size_t count)
     {
         CHECK_ERROR(count, "List size must be greater than 0.");
         return static_cast<T*>((T*)(new byte[sizeof(T) * count]));
     }
-    static void InternalMove(T* dest, const T* src, size_t count)
+
+    static void ReleaseRawSpace(T* buffer)
     {
-        InternalMoveT(dest, src, count, IsPOD<T>::Result());
+        delete[](char*)buffer;
     }
 
-    static void InternalMoveT(T* dest, const T* src, size_t count, FalseType)
+    void InternalMoveSequence(T* dest, T* src)
     {
-        if (src < dest)
+        InternalMoveSequenceT(dest, src, IsPOD<T>::Result());
+        back = dest + (back - src);
+    }
+
+    void InternalMoveSequenceT(T* dest, T* src, FalseType)
+    {
+        if (dest > src)
         {
-            size_t i = count - 1;
-            while (i != -1)
+            size_t length = back - src;
+            size_t offset = dest - src;
+            T* pEnd = Max(back, dest);
+            T* ptr = back + offset - 1;
+            try
             {
-                dest[i] = RvalueCast(src[i]);
-                i--;
+                while (ptr >= pEnd)
+                {
+                    new (ptr) T(RvalueCast(*(ptr - offset)));
+                    ptr--;
+                }
+                while (ptr >= dest)
+                {
+                    *ptr = RvalueCast(*(ptr - offset));
+                    ptr--;
+                }
+            }
+            catch (...)
+            {
+                ptr++;
+                if (ptr < back)
+                {
+                    ptr = back;
+                }
+                while (ptr < back + offset)
+                {
+                    ptr->~T();
+                    ptr++;
+                }
+                throw;
+            }
+            ptr = src;
+            pEnd = Min(dest, back);
+            while (ptr < pEnd)
+            {
+                ptr->~T();
+                ptr++;
             }
         }
-        else if (src > dest)
+        else if (dest < src)
         {
-            size_t i;
-            for (i = 0; i < count; i++)
+            T* ptr = src;
+            size_t length = back - src;
+            size_t offset = src - dest;
+            try
             {
-                dest[i] = RvalueCast(src[i]);
+                while (ptr < back)
+                {
+                    *(ptr - offset) = RvalueCast(*ptr);
+                    ptr++;
+                }
+            }
+            catch (...)
+            {
+                throw;
+            }
+            ptr = dest + length;
+            while (ptr < back)
+            {
+                ptr->~T();
+                ptr++;
             }
         }
     }
-    static void InternalMoveT(T* dest, const T* src, size_t count, TrueType)
+
+    void InternalMoveSequenceT(T* dest, T* src, TrueType)
     {
-        memmove(dest, src, sizeof(T) * count);
+        memmove(dest, src, sizeof(T) * (back - src));
     }
+
     void AdjustSpace(size_t newSize)
     {
         CHECK_ERROR(newSize, "New size must be greater than 0.");
+        CHECK_ERROR(begin, "Pointer begin illgal.");
+        CHECK_ERROR(back, "Pointer back illgal.");
+        CHECK_ERROR(end, "Pointer end illgal.");
+        CHECK_ERROR(begin <= back && back <= end, "Pointer relation illgal.");
+
         T* newMem = GetRawSpace(newSize);
-        CHECK_ERROR(back - begin, "Member back is smaller than begin.");
         size_t newCount = Min(size_t(back - begin), newSize);
         try
         {
-            InternalCopyConstruct(newMem, begin, newCount);
+            InternalMoveConstruct(newMem, begin, newCount);
         }
         catch (...)
         {
-            delete[](char*)newMem;
+            ReleaseRawSpace(newMem);
             throw;
         }
 
         InternalDestruct(begin, back - begin);
         back = newMem + newCount;
-        delete[](char*)begin;
+        ReleaseRawSpace(begin);
         begin = newMem;
         end = newMem + newSize;
     }
@@ -205,6 +364,7 @@ protected:
 
     static void InternalDestructT(T* buffer, size_t count, TrueType)
     {
+
     }
 
     static void InternalDestructT(T* buffer, size_t count, FalseType)
@@ -275,6 +435,7 @@ public:
             throw;
         }
     }
+
     List(const List& list)
         : begin(GetRawSpace(list.end - list.begin))
         , back(begin + (end - begin))
@@ -290,11 +451,54 @@ public:
             throw;
         }
     }
+
     List(List&& list)
         : begin(list.begin)
         , back(list.back)
         , end(list.end)
     {
+        list.begin = nullptr;
+        list.back = nullptr;
+        list.end = nullptr;
+    }
+
+    List<T>& operator=(const List<T>& list)
+    {
+        if (&list != this)
+        {
+            Assign(list);
+        }
+        return *this;
+    }
+
+    List<T>& operator=(List<T>&& list)
+    {
+        if (&list != this)
+        {
+            Assign(RvalueCast(list));
+        }
+        return *this;
+    }
+
+    void Assign(const List<T>& list)
+    {
+        if (list.Count() > this->Capacity())
+        {
+            InternalDestruct(begin, back - begin);
+            back = begin;
+            AdjustSpace(list.Capacity());
+        }
+        InternalCopyAssignment(begin, list.begin, list.Count());
+        back = begin + list.Count();
+    }
+
+    void Assign(List<T>&& list)
+    {
+        InternalDestruct(begin, Count());
+        FreeMemory();
+        begin = list.begin;
+        back = list.back;
+        end = list.end;
         list.begin = nullptr;
         list.back = nullptr;
         list.end = nullptr;
@@ -314,10 +518,9 @@ public:
     {
         if (back == end)
         {
-
-            AdjustSpace(Capacity() + Capacity() / 5 + 1);
+            AdjustSpace(begin, back, Capacity() + Capacity() / 5 + 1);
         }
-        new (back) T(value);
+        InternalConstructAt(back, value);
         back++;
     }
 
@@ -327,7 +530,7 @@ public:
         {
             AdjustSpace(Capacity() + Capacity() / 5 + 1);
         }
-        new (back) T(RvalueCast(value));
+        InternalConstructAt(back, RvalueCast(value));
         back++;
     }
 
@@ -335,7 +538,7 @@ public:
     {
         CHECK_ERROR(back != begin, "List is empty.");
         back--;
-        back->~T();
+        InternalDestructAt(back);
     }
 
     void Insert(size_t place, const T* first, const T* last)
@@ -343,14 +546,13 @@ public:
         CHECK_ERROR(begin + place <= back, "Parameter place is invalid.");
         CHECK_ERROR(first && last && first <= last, "Range invalid.");
 
-        size_t insertCount = last - first;
-        if (insertCount + back > end)
+        size_t count = last - first;
+        if (count + back > end)
         {
-            AdjustSpace(insertCount + Count());
+            AdjustSpace(count + Count());
         }
-        InternalMove(begin + place + insertCount, begin + place, Count() - place);
-        InternalDestruct(begin + place, Count() - place);
-        InternalCopyConstruct(begin + place, first, insertCount);
+        InternalMoveSequence(begin + place + count, begin + place);
+        InternalCopyConstruct(begin + place, first, count);
     }
 
     void Insert(size_t place, size_t count, const T& value)
@@ -359,40 +561,43 @@ public:
         {
             AdjustSpace(end - begin + count);
         }
-        InternalMove(begin + place + count, begin + place, count);
-        InternalDestruct(begin + place, count);
+        InternalMoveSequence(begin + place + count, begin + place);
         InternalCopyConstruct(begin + place, count, value);
     }
 
     void Insert(size_t place, const T& value)
     {
+        CHECK_ERROR(place >= 0 && place < back - begin, "Place illgal.");
+        size_t originCount = back - begin;
         if (end - back < 1)
         {
             AdjustSpace(end - begin + 1);
         }
-        InternalMove(begin + place + 1, begin + place, 1);
-        InternalDestruct(begin + place, 1);
-        new (begin + place) T(value);
+        InternalMoveSequence(begin + place + 1, begin + place);
+        InternalConstructAt(begin + place, value);
     }
 
     void Insert(size_t place, T&& value)
     {
+        CHECK_ERROR(place >= 0 && place < back - begin, "Place illgal.");
+        size_t originCount = back - begin;
         if (end - back < 1)
         {
             AdjustSpace(end - begin + 1);
         }
-        InternalMove(begin + place + 1, begin + place, 1);
-        InternalDestruct(begin + place, 1);
-        new (begin + place) T(RvalueCast(value));
+        InternalMoveSequence(begin + place + 1, begin + place);
+        InternalConstructAt(begin + place, RvalueCast(value));
     }
 
     T& operator[](size_t index)
     {
+        CHECK_ERROR(index >= 0 && index < back - begin, "Index illgal.");
         return begin[index];
     }
 
     const T& operator[](size_t index) const
     {
+        CHECK_ERROR(index >= 0 && index < back - begin, "Index illgal.");
         return begin[index];
     }
 
