@@ -833,23 +833,13 @@ struct NotPOD
 {};
 
 template<typename T>
-struct IsPOD: Bool<__is_pod(T)>
+struct IsPOD
 {
-    using Result = typename If<Self, TrueType, FalseType>::Result;
+    using Result = Bool<__is_pod(T)>;
 };
 
 
 /*SFINAE*/
-
-//template<typename T>
-//struct IsClass
-//{
-//private:
-//	template<typename TClass> static Bool<true> test(int TClass::*) {}
-//	template<typename TClass> static Bool<false> test(...) {}
-//public:
-//	using Result = decltype(test<T>(0));
-//};
 
 
 }

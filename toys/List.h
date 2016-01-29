@@ -80,7 +80,7 @@ protected:
         }
     }
 
-    static void InternalMoveAssignment(T* dest, const T* src, size_t count)
+    void InternalMoveAssignment(T* dest, const T* src, size_t count)
     {
 
         CHECK_ERROR(dest, "Destination pointer illegal.");
@@ -93,12 +93,12 @@ protected:
         }
     }
 
-    static void InternalCopyAssignment(T* dest, const T* src, size_t count)
+    void InternalCopyAssignment(T* dest, const T* src, size_t count)
     {
         InternalCopyAssignmentT(dest, src, count, IsPOD<T>::Result());
     }
 
-    static void InternalCopyAssignmentT(T* dest, const T* src, size_t count, TrueType)
+    void InternalCopyAssignmentT(T* dest, const T* src, size_t count, TrueType)
     {
         CHECK_ERROR(dest, "Destination pointer illegal.");
         CHECK_ERROR(src, "Source pointer illegal.");
@@ -107,7 +107,7 @@ protected:
         memcpy(dest, src, sizeof(T) * count);
     }
 
-    static void InternalCopyAssignmentT(T* dest, const T* src, size_t count, FalseType)
+    void InternalCopyAssignmentT(T* dest, const T* src, size_t count, FalseType)
     {
         CHECK_ERROR(dest, "Destination pointer illegal.");
         CHECK_ERROR(src, "Source pointer illegal.");
@@ -291,6 +291,7 @@ protected:
                 }
                 throw;
             }
+            /*
             ptr = src;
             pEnd = Min(dest, back);
             while (ptr < pEnd)
@@ -298,6 +299,7 @@ protected:
                 ptr->~T();
                 ptr++;
             }
+            */
         }
         else if (dest < src)
         {
@@ -316,12 +318,14 @@ protected:
             {
                 throw;
             }
+            /*
             ptr = dest + length;
             while (ptr < back)
             {
                 ptr->~T();
                 ptr++;
             }
+            */
         }
     }
 
@@ -547,12 +551,13 @@ public:
         CHECK_ERROR(first && last && first <= last, "Range invalid.");
 
         size_t count = last - first;
+        size_t oldCount = back - begin;
         if (count + back > end)
         {
             AdjustSpace(count + Count());
         }
         InternalMoveSequence(begin + place + count, begin + place);
-        InternalCopyConstruct(begin + place, first, count);
+        InternalCopyAssignment(begin + place, first, count);       
     }
 
     void Insert(size_t place, size_t count, const T& value)
@@ -562,7 +567,7 @@ public:
             AdjustSpace(end - begin + count);
         }
         InternalMoveSequence(begin + place + count, begin + place);
-        InternalCopyConstruct(begin + place, count, value);
+        InternalCopyAssignment(begin + place, &value, count);
     }
 
     void Insert(size_t place, const T& value)
@@ -574,7 +579,7 @@ public:
             AdjustSpace(end - begin + 1);
         }
         InternalMoveSequence(begin + place + 1, begin + place);
-        InternalConstructAt(begin + place, value);
+        InternalCopyAssignment(begin + place, &value, 1);
     }
 
     void Insert(size_t place, T&& value)
@@ -586,7 +591,7 @@ public:
             AdjustSpace(end - begin + 1);
         }
         InternalMoveSequence(begin + place + 1, begin + place);
-        InternalConstructAt(begin + place, RvalueCast(value));
+        InternalMoveAssignment(begin + place, &value, 1);
     }
 
     T& operator[](size_t index)
