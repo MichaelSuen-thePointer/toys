@@ -161,6 +161,7 @@
     <ClInclude Include="KeySlot.h" />
     <ClInclude Include="List.h" />
     <ClInclude Include="List2.h" />
+    <ClInclude Include="ListBase.h" />
     <ClInclude Include="ListTest.h" />
     <ClInclude Include="Numbers.h" />
     <ClInclude Include="Pointer.h" />
