@@ -151,6 +151,7 @@
     <ClInclude Include="Allocator.h" />
     <ClInclude Include="any.h" />
     <ClInclude Include="anylink.h" />
+    <ClInclude Include="Array.h" />
     <ClInclude Include="Base.h" />
     <ClInclude Include="BaseType.h" />
     <ClInclude Include="callable.h" />

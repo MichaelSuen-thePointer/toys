@@ -22,10 +22,10 @@ public:
     }
 
     List(size_t count)
-        : begin(GetRawSpace(count))
-        , back(begin + count)
-        , end(begin + count)
-    {
+    { 
+        begin = GetRawSpace(count);
+        back = begin + count;
+        end = begin + count
         try
         {
             InternalDefaultConstruct(begin, count);
@@ -38,10 +38,11 @@ public:
     }
 
     List(size_t count, const T& value)
-        : begin(GetRawSpace(count))
-        , back(begin + count)
-        , end(begin + count)
     {
+        begin = GetRawSpace(count);
+        back = begin + count;
+        end = begin + count;
+    
         try
         {
             InternalCopyConstruct(begin, count, value);
@@ -54,10 +55,11 @@ public:
     }
 
     List(T* first, T* last)
-        : begin(GetRawSpace(last - first))
-        , back(begin + (last - first))
-        , end(begin + last - first)
     {
+        begin = GetRawSpace(last - first);
+        back = begin + (last - first);
+        end = begin + last - first;
+    
         try
         {
             InternalCopyConstruct(begin, first, last - first);
@@ -70,10 +72,11 @@ public:
     }
 
     List(const List& list)
-        : begin(GetRawSpace(list.end - list.begin))
-        , back(begin + (end - begin))
-        , end(begin + list.Capacity())
     {
+        begin = GetRawSpace(list.end - list.begin);
+        back = begin + (end - begin);
+        end = begin + list.Capacity();
+    
         try
         {
             InternalCopyConstruct(begin, list.begin, list.back - list.begin);
@@ -86,10 +89,11 @@ public:
     }
 
     List(List&& list)
-        : begin(list.begin)
-        , back(list.back)
-        , end(list.end)
     {
+        begin = list.begin;
+        back = list.back;
+        end = list.end;
+    
         list.begin = nullptr;
         list.back = nullptr;
         list.end = nullptr;

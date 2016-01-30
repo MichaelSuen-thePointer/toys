@@ -762,7 +762,7 @@ T* _AddressOf(T& value, FalseType) noexcept
 template<class T> inline
 T* AddressOf(T& value) noexcept
 {
-    return _AddressOf(value, IsFunction<T>());
+    return _AddressOf(value, typename IsFunction<T>::Result());
 }
 
 template<class T> inline constexpr 

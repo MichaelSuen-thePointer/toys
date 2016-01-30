@@ -3,6 +3,7 @@
 #define LISTBASE_H
 
 #include "Base.h"
+#include "Template.h"
 namespace pl
 {
 
@@ -14,10 +15,10 @@ protected:
     T* back;
     T* end;
 
-    ListBase(T* begin, size_t backOffset, size_t endOffset)
-        : begin(begin)
-        , back(begin + backOffset)
-        , end(begin + endOffset)
+    ListBase()
+        : begin(nullptr)
+        , back(nullptr)
+        , end(nullptr)
     {
     }
 
@@ -125,7 +126,7 @@ protected:
     }
     T* InternalGetAddress(const T& value)
     {
-        return AddressOf(value);
+        return AddressOf(const_cast<T&>(value));
     }
 private:
     void InternalDefaultConstructT(T* dest, size_t count, FalseType)
