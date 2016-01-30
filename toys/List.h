@@ -19,12 +19,12 @@ protected:
     T* back;
     T* end;
 
-    static void InternalDefaultConstruct(T* dest, size_t count)
+    void InternalDefaultConstruct(T* dest, size_t count)
     {
         InternalDefaultConstructT(dest, count, IsPOD<T>::Result());
     }
 
-    static void InternalDefaultConstructT(T* dest, size_t count, FalseType)
+    void InternalDefaultConstructT(T* dest, size_t count, FalseType)
     {
         CHECK_ERROR(dest, "Destination pointer illegal.");
         CHECK_ERROR(count, "Count must be greater than 0.");
@@ -48,7 +48,7 @@ protected:
         }
     }
 
-    static void InternalDefaultConstructT(T* dest, size_t count, TrueType)
+    void InternalDefaultConstructT(T* dest, size_t count, TrueType)
     {
         CHECK_ERROR(dest, "Destination pointer illegal.");
         CHECK_ERROR(count, "Count must be greater than 0.");
@@ -56,7 +56,7 @@ protected:
         memset(dest, 0, sizeof(T) * count);
     }
 
-    static void InternalCopyConstruct(T* dest, size_t count, const T& value)
+    void InternalCopyConstruct(T* dest, size_t count, const T& value)
     {
         CHECK_ERROR(dest, "Destination pointer illegal.");
         CHECK_ERROR(count, "Count must be greater than 0.");
@@ -119,12 +119,12 @@ protected:
         }
     }
 
-    static void InternalCopyConstruct(T* dest, const T* src, size_t count)
+    void InternalCopyConstruct(T* dest, const T* src, size_t count)
     {
         InternalCopyConstructT(dest, src, count, IsPOD<T>::Result());
     }
 
-    static void InternalCopyConstructT(T* dest, const T* src, size_t count, TrueType)
+    void InternalCopyConstructT(T* dest, const T* src, size_t count, TrueType)
     {
         CHECK_ERROR(dest, "Destination pointer illegal.");
         CHECK_ERROR(src, "Source pointer illegal.");
@@ -133,7 +133,7 @@ protected:
         memcpy(dest, src, sizeof(T) * count);
     }
 
-    static void InternalCopyConstructT(T* dest, const T* src, size_t count, FalseType)
+    void InternalCopyConstructT(T* dest, const T* src, size_t count, FalseType)
     {
         CHECK_ERROR(dest, "Destination pointer illegal.");
         CHECK_ERROR(src, "Source pointer illegal.");
@@ -199,53 +199,13 @@ protected:
         }
     }
 
-    void InternalConstructAt(T* place, const T& value)
-    {
-        new (place) T(value);
-    }
-
-    void InternalConstructAt(T* place, T&& value)
-    {
-        new (place) T(RvalueCast(value));
-    }
-
-    void InternalDestructAt(T* place)
-    {
-        place->~T();
-    }
-
-    static void InternalCopy(T* dest, const T* src, size_t count)
-    {
-        InternalCopyT(dest, src, count, IsPOD<T>::Result());
-    }
-
-    static void InternalCopyT(T* dest, const T* src, size_t count, TrueType)
-    {
-        CHECK_ERROR(dest, "Destination pointer illegal.");
-        CHECK_ERROR(src, "Source pointer illegal.");
-        CHECK_ERROR(count, "Element count illegal.");
-        memcpy(dest, src, count);
-    }
-
-    static void InternalCopyT(T* dest, const T* src, size_t count, FalseType)
-    {
-        CHECK_ERROR(dest, "Destination pointer illegal.");
-        CHECK_ERROR(src, "Source pointer illegal.");
-        CHECK_ERROR(count, "Element count illegal.");
-
-        for (size_t i = 0; i < count; i++)
-        {
-            dest[i] = src[i];
-        }
-    }
-
-    static T* GetRawSpace(size_t count)
+    T* GetRawSpace(size_t count)
     {
         CHECK_ERROR(count, "List size must be greater than 0.");
         return static_cast<T*>((T*)(new byte[sizeof(T) * count]));
     }
 
-    static void ReleaseRawSpace(T* buffer)
+    void ReleaseRawSpace(T* buffer)
     {
         delete[](char*)buffer;
     }
@@ -291,15 +251,6 @@ protected:
                 }
                 throw;
             }
-            /*
-            ptr = src;
-            pEnd = Min(dest, back);
-            while (ptr < pEnd)
-            {
-                ptr->~T();
-                ptr++;
-            }
-            */
         }
         else if (dest < src)
         {
@@ -318,14 +269,6 @@ protected:
             {
                 throw;
             }
-            /*
-            ptr = dest + length;
-            while (ptr < back)
-            {
-                ptr->~T();
-                ptr++;
-            }
-            */
         }
     }
 
@@ -524,7 +467,7 @@ public:
         {
             AdjustSpace(begin, back, Capacity() + Capacity() / 5 + 1);
         }
-        InternalConstructAt(back, value);
+        InternalCopyConstruct(back, &value, 1);
         back++;
     }
 
@@ -534,7 +477,7 @@ public:
         {
             AdjustSpace(Capacity() + Capacity() / 5 + 1);
         }
-        InternalConstructAt(back, RvalueCast(value));
+        InternalMoveConstruct(back, &value, 1);
         back++;
     }
 
@@ -542,7 +485,7 @@ public:
     {
         CHECK_ERROR(back != begin, "List is empty.");
         back--;
-        InternalDestructAt(back);
+        InternalDestruct(back, 1);
     }
 
     void Insert(size_t place, const T* first, const T* last)
@@ -557,7 +500,7 @@ public:
             AdjustSpace(count + Count());
         }
         InternalMoveSequence(begin + place + count, begin + place);
-        InternalCopyAssignment(begin + place, first, count);       
+        InternalCopyAssignment(begin + place, first, count);
     }
 
     void Insert(size_t place, size_t count, const T& value)
