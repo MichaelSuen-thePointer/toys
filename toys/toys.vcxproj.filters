@@ -39,9 +39,6 @@
     <ClInclude Include="CPS.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Tree.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="List.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -82,6 +79,15 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="Array.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SortedList.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="doubleDispatch.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="AVLTree.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

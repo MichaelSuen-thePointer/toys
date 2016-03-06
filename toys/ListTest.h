@@ -158,7 +158,7 @@ int main()
 
     random_exception relist[50];
     std::vector<int> a;
-    List<random_exception> list(1, random_exception());
+    List<random_exception> list(0);
     try
     {
         for (int i = 0; i < 50; i++)

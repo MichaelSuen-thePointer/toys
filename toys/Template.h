@@ -839,9 +839,6 @@ struct IsPOD
 };
 
 
-/*SFINAE*/
-
-
 }
 
 #endif // !TEMPLATE_H

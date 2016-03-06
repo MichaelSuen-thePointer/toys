@@ -127,6 +127,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <Profile>true</Profile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -145,6 +146,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <Profile>true</Profile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -156,6 +158,7 @@
     <ClInclude Include="BaseType.h" />
     <ClInclude Include="callable.h" />
     <ClInclude Include="CPS.h" />
+    <ClInclude Include="doubleDispatch.h" />
     <ClInclude Include="Event.h" />
     <ClInclude Include="Exception.h" />
     <ClInclude Include="Function.h" />
@@ -167,10 +170,11 @@
     <ClInclude Include="Numbers.h" />
     <ClInclude Include="Pointer.h" />
     <ClInclude Include="Property.h" />
+    <ClInclude Include="SortedList.h" />
     <ClInclude Include="String.h" />
     <ClInclude Include="StringUtils.h" />
     <ClInclude Include="Template.h" />
-    <ClInclude Include="Tree.h" />
+    <ClInclude Include="AVLTree.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
