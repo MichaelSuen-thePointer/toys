@@ -6,7 +6,7 @@
 #include <allocators>
 #include <functional>
 #include <algorithm>
-#include <utility>
+#include "extension.h"
 namespace pl
 {
 namespace container
@@ -215,21 +215,6 @@ public:
     {
         return _data_type::_min(pnode);
     }
-    _balenced_tree_base(const key_compare& comparer, const allocator_type& allocator)
-        : _key_compare(comparer)
-        , _node_allocator(allocator)
-        , _data()
-    {
-        _construct();
-    }
-    _balenced_tree_base(const key_compare& comparer, allocator_type&& allocator)
-        : _key_compare(comparer)
-        , _node_allocator(std::move(allocator))
-        , _data()
-    {
-        _construct();
-    }
-    
     key_compare& _get_compare() noexcept
     {
         return _key_compare;
@@ -246,6 +231,272 @@ public:
     {
         return _node_allocator;
     }
+    _data_type& _get_data() noexcept
+    {
+        return _data;
+    }
+    const _data_type& _get_data() const noexcept
+    {
+        return _data;
+    }
+    _node_ptr& _head() noexcept
+    {
+        return _get_data()._head;
+    }
+    const _node_ptr& _head() const noexcept
+    {
+        return _get_data()._head;
+    }
+    size_type& _size() noexcept
+    {
+        return _get_data()._size;
+    }
+    const size_type& _size() const noexcept
+    {
+        return _get_data()._size;
+    }
+
+    _balenced_tree_base(const key_compare& comparer, const allocator_type& allocator)
+        : _key_compare(comparer)
+        , _node_allocator(allocator)
+        , _data()
+    {
+        _construct();
+    }
+    _balenced_tree_base(const key_compare& comparer, allocator_type&& allocator)
+        : _key_compare(comparer)
+        , _node_allocator(std::move(allocator))
+        , _data()
+    {
+        _construct();
+    }
+    
+    ~_balenced_tree_base() noexcept
+    {
+        _free_head_node(_head());
+    }
+
+    void _construct()
+    {
+        _head() = _buy_head_node();
+    }
+
+    void _copy_allocator(const _allocator_node& allocator)
+    {
+        _pocca(_get_allocator(), allocator);
+    }
+
+    void _move_allocator(const _allocator_node& allocator)
+    {
+        _pocma(_get_allocator(), allocator);
+    }
+
+    void _swap_allocator(const _allocator_node& allocator)
+    {
+        _pocs(_get_allocator(), allocator);
+    }
+
+    _node_ptr _buy_head_node()
+    {
+        _node_ptr pnode = _get_allocator().allocate(1);
+
+        try
+        {
+            _get_allocator().construct(std::addressof(_left(pnode)), pnode);
+            _get_allocator().construct(std::addressof(_right(pnode)), pnode);
+            _get_allocator().construct(std::addressof(_parent(pnode)), pnode);
+        }
+        catch (...)
+        {
+            _get_allocator().deallocate(pnode, 1);
+            throw;
+        }
+
+        return pnode;
+    }
+
+    void _free_head_node(_node_ptr pnode)
+    {
+        _get_allocator().destroy(std::addressof(_left(pnode)));
+        _get_allocator().destroy(std::addressof(_right(pnode)));
+        _get_allocator().destroy(std::addressof(_parent(pnode)));
+        _get_allocator().deallocate(pnode, 1);
+    }
+
+    void _buy_nonvalue_node()
+    {
+        _node_ptr pnode = _get_allocator().allocate(1);
+        try
+        {
+            _get_allocator().construct(std::addressof(_left(pnode)), _head());
+            _get_allocator().construct(std::addressof(_right(pnode)), _head());
+            _get_allocator().construct(std::addressof(_parent(pnode)), _head());
+        }
+        catch (...)
+        {
+            _get_allocator().deallocate(pnode, 1);
+            throw;
+        }
+        return pnode;
+    }
+
+    void _free_nonvalue_node(_node_ptr pnode)
+    {
+        _free_head_node(pnode);
+    }
+
+    template<class... TArgs>
+    _node_ptr _buy_node(TArgs&&... args)
+    {
+        _node_ptr pnode = _buy_nonvalue_node();
+        try
+        {
+            _get_allocator().construct(
+                std::addressof(_value(pnode)),
+                std::forward<TArgs>(args)...);
+        }
+        catch (...)
+        {
+            _free_nonvalue_node(pnode);
+            throw;
+        }
+        return pnode;
+    }
+};
+
+template<class TBalencedTreeTraits>
+class binary_tree: public _balenced_tree_base<TBalencedTreeTraits>
+{
+public:
+    using _traits = TBalencedTreeTraits;
+    using _self = binary_tree<_traits>;
+    using _base = _balenced_tree_base<_traits>;
+
+    using key_type = _traits::key_type;
+    using value_compare = _traits::value_compare;
+
+    const static bool _IsMultiKey = _traits::_IsMultiKey;
+
+    using _node           = typename _base::_node;
+    using _node_ptr       = typename _base::_node_ptr;
+    using _allocator_node = typename _base::_allocator_node;
+    
+    using key_compare    = typename _base::key_compare;
+    using allocator_type = typename _base::allocator_type;
+    
+    using value_type      = typename _base::value_type;
+    using size_type       = typename _base::size_type;
+    using difference_type = typename _base::difference_type;
+    using pointer         = typename _base::pointer;
+    using const_pointer   = typename _base::const_pointer;
+    using reference       = typename _base::reference;
+    using const_reference = typename _base::const_reference;
+    
+    struct _copy_tag {};
+    struct _move_tag {};
+
+    size_type size() const noexcept
+    {
+        return _base::_size();
+    }
+
+    size_type max_size() const noexcept
+    {
+        return _base::_get_allocator().max_size();
+    }
+
+    bool empty() const noexcept
+    {
+        return size() == 0;
+    }
+
+    allocator_type get_allocator() const noexcept
+    {
+        return _base::_get_allocator();
+    }
+
+    key_compare key_comp() const
+    {
+        return _base::_get_compare();
+    }
+
+    value_compare value_comp() const
+    {
+        return value_compare(key_comp());
+    }
+
+    binary_tree(const key_compare& compare, const allocator_type& allocator)
+        : _base(compare, allocator)
+    {
+    }
+
+    binary_tree(const _self& right, const allocator_type& allocator)
+        : _base(right.key_comp(), right.get_allocator())
+    {
+        try
+        {
+            _copy(right, _copy_tag());
+        }
+        catch (...)
+        {
+            _tidy();
+            throw;
+        }
+    }
+
+    binary_tree(_self&& right)
+        : _base(right.key_comp(), std::move(right._base::_get_allocator()))
+    {
+        _assign_rv(std::forward<_self>(right), std::true_type());
+    }
+
+    binary_tree(_self&& right, const allocator_type& allocator)
+        : _base(right.key_comp(), allocator)
+    {
+        _assign_rv(std::forward<_self>(right));
+    }
+
+    _self& operator=(_self&& right)
+    {
+        if (this != &right)
+        {
+            clear();
+            if (_allocator_node::propagate_on_container_move_assignment::value &&
+                _base::_get_allocator() != right._base::_get_allocator())
+            {
+                _base::_move_allocator(right._base::_get_allocator());
+            }
+            _assign_rv(std::forward<_self>(right));
+        }
+        return *this;
+    }
+
+    void _assign_rv(_self&& right, std::true_type)
+    {
+        std::swap(_base::_get_compare(), _right._base::_get_compare());
+        std::swap(_base::_head(), _right._base::_head());
+        std::swap(_base::_size(), _right._base::_size());
+    }
+
+    void _assign_rv(_self&& right, std::false_type)
+    {
+        if (get_allocator() == right.get_allocator())
+        {
+            _assign_rv(std::forward<_self>(_right), std::true_type());
+        }
+        else
+        {
+            _copy(_right);
+        }
+    }
+
+    void _assign_rv(_self&& right)
+    {
+        _assign_rv(std::forward<_self>(right), typename _allocator_node::propagate_on_container_move_assignment());
+    }
+
+
+
 };
 
 template<typename T,
@@ -254,12 +505,12 @@ template<typename T,
 class banlenced_tree
 {
 public:
-    using value_type = T;
-    using allocator_type = TAllocator;
-    using reference = value_type&;
+    using value_type      = T;
+    using allocator_type  = TAllocator;
+    using reference       = value_type&;
     using const_reference = const value_type&;
-    using pointer = std::allocator_traits<allocator_type>::pointer;
-    using const_pointer = std::allocator_traits<allocator_type>::const_pointer;
+    using pointer         = typename std::allocator_traits<allocator_type>::pointer;
+    using const_pointer   = typename std::allocator_traits<allocator_type>::const_pointer;
     struct value_compare
     {
     public:
