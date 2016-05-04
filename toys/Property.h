@@ -6,20 +6,6 @@
 #include <functional>
 namespace pl
 {
-/*
-API约定：
-getter:
-类型如const T(const T&)的函数
-在获取属性的时候会被API调用
-其中参数const T&会获得封装的字段的值，由用户在getter中处理，并返回
-
-setter:
-类型如void(T&, const T&)的函数
-在设定属性的时候会被API调用
-参数T&是要被修改的属性内部字段的引用，const T&是新的值
-由用户在setter中处理新值，然后对内部字段做出修改
-*/
-
 template<typename T>
 using PropertyGetterType = std::function<const T(const T&)>;
 

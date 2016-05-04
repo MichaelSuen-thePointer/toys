@@ -171,6 +171,11 @@ struct ListGet<List<T, TArgs...>>
     using Rest = List<TArgs...>;
 };
 
+template<>
+struct ListGet<List<>>
+{
+};
+
 template<typename... TArgs>
 struct List: ListGet<List<TArgs...>>
 {
@@ -204,17 +209,18 @@ struct Change<A<Args...>, B>
 template<typename... T>
 struct ListConnect;
 
-
 template<typename... TArgs1, typename... TArgs2>
 struct ListConnect<List<TArgs1...>, List<TArgs2...>>
 {
     using Result = typename List<TArgs1..., TArgs2...>;
 };
+
 template<typename... TArgs1, typename... TArgs2, typename... TArgs3>
 struct ListConnect<List<TArgs1...>, List<TArgs2...>, List<TArgs3...>>
 {
     using Result = typename List<TArgs1..., TArgs2..., TArgs3...>;
 };
+
 
 template<typename T>
 struct ListReverse;
@@ -351,6 +357,52 @@ struct ListFilter<TFilter, List<TLast>>
     >::Result;
 };
 
+template<typename T, size_t V>
+struct ListRemoveFrontN;
+
+template<typename... TArgs, size_t VCount>
+struct ListRemoveFrontN<List<TArgs...>, VCount>
+{
+    static_assert(VCount > 0, "VCount must be greater than 0.");
+    using Param = List<TArgs...>;
+    using Result = typename ListRemoveFrontN<typename Param::Rest, VCount - 1>::Result;
+};
+
+template<typename... TArgs>
+struct ListRemoveFrontN<List<TArgs...>, 0>
+{
+    using Param = List<TArgs...>;
+    using Result = Param;
+};
+
+template<typename T1, typename T2>
+struct ListEqual;
+
+template<class... TArgs1, class... TArgs2>
+struct ListEqual<List<TArgs1...>, List<TArgs2...>>
+{
+    using List1 = List<TArgs1...>;
+    using List2 = List<TArgs2...>;
+    using Result = typename And<typename Eq<typename List1::First, typename List2::First>::Result,
+                                typename ListEqual<typename List1::Rest, typename List2::Rest>::Result>::Result;
+};
+
+template<class T>
+struct ListEqual<List<T>, List<>>
+{
+    using List1 = List<T>;
+    using List2 = List<>;
+    using Result = FalseType;
+};
+
+template<class T>
+struct ListEqual<List<>, List<T>>
+{
+    using List1 = List<>;
+    using List2 = List<T>;
+    using Result = FalseType;
+};
+
 template<typename T>
 struct MapNone
 {
@@ -425,9 +477,7 @@ struct ListSort<List<TArgs...>>
     using Right = typename ListFilter<FilterGt, List<TArgs...>>::Result;
     using SortedLeft = typename ListSort<Left>::Result;
     using SortedRight = typename ListSort<Right>::Result;
-    using Result = typename ListConnect<
-        typename ListConnect<SortedLeft, Middle, SortedRight>::Result
-    >::Result;
+    using Result = typename ListConnect<SortedLeft, Middle, SortedRight>::Result
 };
 
 
@@ -827,15 +877,22 @@ struct PredOrFact
     >;
 };
 
-struct POD
-{};
-struct NotPOD
-{};
-
 template<typename T>
 struct IsPOD
 {
     using Result = Bool<__is_pod(T)>;
+};
+
+template<class... TArgs>
+struct ArgList
+{
+    using _argPack = tml::List<TArgs...>;
+
+    template<size_t VCount>
+    struct RemoveFront
+    {
+
+    };
 };
 
 

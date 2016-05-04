@@ -13,27 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="usable">
+      <UniqueIdentifier>{f19e4b26-f5ad-4ddf-8280-0b9c1149afad}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="String.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Base.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Numbers.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Event.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Function.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Pointer.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Template.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="CPS.h">
@@ -63,9 +48,6 @@
     <ClInclude Include="anylink.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="any.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="KeySlot.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -93,10 +75,52 @@
     <ClInclude Include="extension.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="lambda.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Base.h">
+      <Filter>usable</Filter>
+    </ClInclude>
+    <ClInclude Include="Function.h">
+      <Filter>usable</Filter>
+    </ClInclude>
+    <ClInclude Include="RBTree.h">
+      <Filter>usable</Filter>
+    </ClInclude>
+    <ClInclude Include="String.h">
+      <Filter>usable</Filter>
+    </ClInclude>
+    <ClInclude Include="Template.h">
+      <Filter>usable</Filter>
+    </ClInclude>
+    <ClInclude Include="Event.h">
+      <Filter>usable</Filter>
+    </ClInclude>
+    <ClInclude Include="any.h">
+      <Filter>usable</Filter>
+    </ClInclude>
+    <ClInclude Include="Pointer.h">
+      <Filter>usable</Filter>
+    </ClInclude>
+    <ClInclude Include="BTree.h">
+      <Filter>usable</Filter>
+    </ClInclude>
+    <ClInclude Include="LazyMarco.h">
+      <Filter>usable</Filter>
+    </ClInclude>
+    <ClInclude Include="SetExtension.h">
+      <Filter>usable</Filter>
+    </ClInclude>
+    <ClInclude Include="RelationSchemaCalculation.h">
+      <Filter>usable</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RelationSchemaCalculation.cpp">
+      <Filter>usable</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -12,6 +12,93 @@ namespace pl
 namespace container
 {
 
+template<class TTree>
+class _binary_tree_unchecked_const_iterator
+{
+public:
+    using _self = _binary_tree_unchecked_const_iterator<TTree>;
+    using _tree = TTree;
+    using iterator_category = std::bidirectional_iterator_tag;
+    using _node_ptr = _tree::_node_ptr;
+    using value_type = _tree::value_type;
+    using difference_type = _tree::difference_type;
+    using pointer = _tree::const_pointer;
+    using reference = _tree::reference;
+
+public:
+    _node_ptr _ptr;
+
+    _binary_tree_unchecked_const_iterator(_node_ptr pnode = nullptr)
+        : _ptr(pnode)
+    {
+    }
+    reference operator*() const
+    {
+        return _tree::_value(_ptr);
+    }
+    pointer operator->() const
+    {
+        return std::pointer_traits<pointer>::pointer_to(**this);
+    }
+    
+    //pre-increment
+    _self& operator++()
+    {
+        if (!_tree::_is_valid(_ptr))
+        {
+
+        }
+        else if (_tree::_is_valid(_tree::_right(_ptr)))
+        {
+            _ptr = _tree::_min(_tree::_right(_ptr));
+        }
+        else
+        {
+            _node_ptr pnode;
+            while (_tree::_is_valid(_pnode = _tree::_parent(_ptr)) &&
+                   _ptr == _tree::_right(_pnode))
+            {
+                _ptr = _pnode;
+            }
+            _ptr = _pnode;  
+
+        }
+        return *this;
+    }
+
+    _self operator++(int)
+    {
+        _self tmp = *this;
+        ++*this;
+        return tmp;
+    }
+
+    _self& operator--()
+    {
+        if (!_tree::_is_valid(_ptr))
+        {
+        }
+        else if (_tree::_is_valid(_tree::_left(_ptr)))
+        {
+            _ptr = _tree::_max(_tree::_left(_ptr));
+        }
+        else
+        {
+            _node_ptr pnode;
+            while (_tree::_is_valid(pnode = _tree::_parent(_ptr)) &&
+                   _ptr == _tree::_left(_pnode))
+            {
+                _ptr = _pnode;
+            }
+            if (_tree::_is_valid(_ptr))
+            {
+                _ptr = pnode;
+            }
+        }
+        return *this;
+    }
+};
+
 template<typename T>
 struct _simple_types
 {
@@ -64,6 +151,7 @@ template<class TKey,
          bool  VIsMultipleKey>
 struct _balenced_tree_traits
 {
+
     using _self          = _balenced_tree_traits<TKey, TValue, TCompare, TAllocator, VIsMultipleKey>;
     using key_type       = TKey;
     using value_type     = std::pair<const TKey, TValue>;
@@ -139,6 +227,14 @@ public:
     {
         return pnode->_value;
     }
+    bool operator==(_node_ptr pnode)
+    {
+        return pnode == _head;
+    }
+    static bool _is_null(_node_ptr pnode)
+    {
+        return pnode == _node_ptr();
+    }
     static _node_ptr _max(_node_ptr pnode)
     {
         while (_right(pnode) != nullptr)
@@ -206,6 +302,18 @@ public:
     static reference _value(_node_ptr pnode)
     {
         return _data_type::_value(pnode);
+    }
+    static bool _is_head(_node_ptr pnode)
+    {
+        return _data == pnode;
+    }
+    static bool _is_null(_node_ptr pnode)
+    {
+        return _data_type::_is_null(pnode);
+    }
+    static bool _is_valid(_node_ptr pnode)
+    {
+        return !_is_head(pnode) && !_is_null(pnode);
     }
     static _node_ptr _max(_node_ptr pnode)
     {

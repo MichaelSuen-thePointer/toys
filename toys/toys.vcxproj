@@ -156,6 +156,7 @@
     <ClInclude Include="Array.h" />
     <ClInclude Include="Base.h" />
     <ClInclude Include="BaseType.h" />
+    <ClInclude Include="BTree.h" />
     <ClInclude Include="callable.h" />
     <ClInclude Include="CPS.h" />
     <ClInclude Include="doubleDispatch.h" />
@@ -164,6 +165,8 @@
     <ClInclude Include="extension.h" />
     <ClInclude Include="Function.h" />
     <ClInclude Include="KeySlot.h" />
+    <ClInclude Include="lambda.h" />
+    <ClInclude Include="LazyMarco.h" />
     <ClInclude Include="List.h" />
     <ClInclude Include="List2.h" />
     <ClInclude Include="ListBase.h" />
@@ -171,6 +174,9 @@
     <ClInclude Include="Numbers.h" />
     <ClInclude Include="Pointer.h" />
     <ClInclude Include="Property.h" />
+    <ClInclude Include="RBTree.h" />
+    <ClInclude Include="RelationSchemaCalculation.h" />
+    <ClInclude Include="SetExtension.h" />
     <ClInclude Include="SortedList.h" />
     <ClInclude Include="String.h" />
     <ClInclude Include="StringUtils.h" />
@@ -179,6 +185,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="RelationSchemaCalculation.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

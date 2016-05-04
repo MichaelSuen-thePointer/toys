@@ -5,101 +5,48 @@
 #include <iostream>
 #include <functional>
 
-class Int;
-class Double;
-class String;
-
-class SampleOperation
+class Person
 {
-public:
-    static void operate(const Int& a, const Int& b)
-    {
-        std::cout << "Int , Int" << std::endl;
-    }
 
-    static void operate(const Int& a, const Double& b)
-    {
-        std::cout << "Int , Double" << std::endl;
-    }
-
-    static void operate(const Int& a, const String& b)
-    {
-        std::cout << "Int , String" << std::endl;
-    }
 };
 
-class Value
+class Student : public Person
 {
-public:
-    virtual void double_dispatch_operation(Value* value) = 0;
-    virtual void double_dispatch_operation(const Int& value) = 0;
-    virtual void double_dispatch_operation(const Double& value) = 0;
-    virtual void double_dispatch_operation(const String& value) = 0;
+
 };
 
-class Int: public Value
+class Teacher : public Person
 {
-public:
-    virtual void double_dispatch_operation(Value* value) override
-    {
-        value->double_dispatch_operation(*this);
-    }
-    virtual void double_dispatch_operation(const Int& value) override
-    {
-        SampleOperation::operate(value, *this);
-    }
-    virtual void double_dispatch_operation(const Double& value) override
-    {
-        throw std::logic_error("not implemented");
-    }
-    virtual void double_dispatch_operation(const String& value) override
-    {
-        throw std::logic_error("not implemented");
-    }
+    
 };
 
-class Double: public Value
+class Officer : public Person
 {
-public:
-    virtual void double_dispatch_operation(Value* value) override
-    {
-        value->double_dispatch_operation(*this);
-    }
-    virtual void double_dispatch_operation(const Int& value) override
-    {
-        SampleOperation::operate(value, *this);
-    }
-    virtual void double_dispatch_operation(const Double& value) override
-    {
-        throw std::logic_error("not implemented");
-    }
-    virtual void double_dispatch_operation(const String& value) override
-    {
-        throw std::logic_error("not implemented");
-    }
+    
 };
 
-class String: public Value
+class Fuck
 {
 public:
-    virtual void double_dispatch_operation(Value* value) override
+    void fuck(Person& p1, Person& p2)
     {
-        value->double_dispatch_operation(*this);
+        std::cout << "person fuck person\n";
     }
-    virtual void double_dispatch_operation(const Int& value) override
+
+    void fuck(Student& p1, Teacher& p2)
     {
-        SampleOperation::operate(value, *this);
+        std::cout << "student fuck teacher\n";
     }
-    virtual void double_dispatch_operation(const Double& value) override
+
+    void fuck(Officer& p1, Student& p2)
     {
-        throw std::logic_error("not implemented");
+        std::cout << "officer fuck student\n";
     }
-    virtual void double_dispatch_operation(const String& value) override
+
+    void fuck(Teacher& p1, Person& p2)
     {
-        throw std::logic_error("not implemented");
+        std::cout << "teacher fuck person\n";
     }
 };
-
-
 
 #endif // !DOUBLE_DISPATCH_H
