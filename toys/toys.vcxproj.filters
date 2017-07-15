@@ -18,9 +18,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Numbers.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="CPS.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -49,9 +46,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="KeySlot.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Exception.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="ListTest.h">
@@ -113,6 +107,24 @@
     </ClInclude>
     <ClInclude Include="RelationSchemaCalculation.h">
       <Filter>usable</Filter>
+    </ClInclude>
+    <ClInclude Include="ConsoleStream.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="StreamWriter.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ScopeGuard.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Encoding.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Numbers.h">
+      <Filter>usable</Filter>
+    </ClInclude>
+    <ClInclude Include="StaticMap.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
