@@ -18,16 +18,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CPS.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="List.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="List2.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Allocator.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="BaseType.h">
@@ -81,9 +75,6 @@
     <ClInclude Include="RBTree.h">
       <Filter>usable</Filter>
     </ClInclude>
-    <ClInclude Include="String.h">
-      <Filter>usable</Filter>
-    </ClInclude>
     <ClInclude Include="Template.h">
       <Filter>usable</Filter>
     </ClInclude>
@@ -114,9 +105,6 @@
     <ClInclude Include="StreamWriter.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="ScopeGuard.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Encoding.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -125,6 +113,21 @@
     </ClInclude>
     <ClInclude Include="StaticMap.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="String.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Bind.h">
+      <Filter>usable</Filter>
+    </ClInclude>
+    <ClInclude Include="tupleext.h">
+      <Filter>usable</Filter>
+    </ClInclude>
+    <ClInclude Include="ScopeGuard.h">
+      <Filter>usable</Filter>
+    </ClInclude>
+    <ClInclude Include="mqlisp.h">
+      <Filter>usable</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

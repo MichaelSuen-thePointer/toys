@@ -48,7 +48,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v141_clang_c2</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -107,6 +107,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -142,6 +143,8 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <CppLanguageStandard>gnu++1y</CppLanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -152,16 +155,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Allocator.h" />
     <ClInclude Include="any.h" />
     <ClInclude Include="anylink.h" />
     <ClInclude Include="Array.h" />
     <ClInclude Include="Base.h" />
     <ClInclude Include="BaseType.h" />
+    <ClInclude Include="Bind.h" />
     <ClInclude Include="BTree.h" />
     <ClInclude Include="callable.h" />
     <ClInclude Include="ConsoleStream.h" />
-    <ClInclude Include="CPS.h" />
     <ClInclude Include="doubleDispatch.h" />
     <ClInclude Include="Encoding.h" />
     <ClInclude Include="Event.h" />
@@ -174,13 +176,16 @@
     <ClInclude Include="List2.h" />
     <ClInclude Include="ListBase.h" />
     <ClInclude Include="ListTest.h" />
+    <ClInclude Include="mqlisp.h" />
     <ClInclude Include="Numbers.h" />
     <ClInclude Include="Pointer.h" />
     <ClInclude Include="Property.h" />
     <ClInclude Include="RBTree.h" />
     <ClInclude Include="RelationSchemaCalculation.h" />
     <ClInclude Include="ScopeGuard.h" />
-    <ClInclude Include="SetExtension.h" />
+    <ClInclude Include="SetExtension.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="SortedList.h" />
     <ClInclude Include="StaticMap.h" />
     <ClInclude Include="StreamWriter.h" />
@@ -188,6 +193,7 @@
     <ClInclude Include="StringUtils.h" />
     <ClInclude Include="Template.h" />
     <ClInclude Include="AVLTree.h" />
+    <ClInclude Include="tupleext.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

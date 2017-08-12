@@ -898,4 +898,179 @@ struct ArgList
 
 }
 
+namespace mq
+{
+
+template<size_t A, size_t B>
+constexpr size_t max_of = A > B ? A : B;
+
+template<size_t A, size_t B>
+constexpr size_t min_of = A < B ? A : B;
+
+template<size_t N>
+constexpr auto ic = std::integral_constant<size_t, N>{};
+
+template<bool B>
+constexpr auto bc = std::bool_constant<B>{};
+
+template<class T>
+auto v = T{};
+
+template<class T>
+struct type_wrapper
+{
+    using type = T;
+};
+
+template<class T>
+constexpr auto type = type_wrapper<T>{};
+
+template<class T>
+constexpr auto type<type_wrapper<T>> = type_wrapper<T>{};
+
+template<class T, class U>
+decltype(auto) operator==(type_wrapper<T>, type_wrapper<U>)
+{
+    return bc<std::is_same_v<T, U>>;
+}
+
+template<class T, class U>
+decltype(auto) operator!=(type_wrapper<T>, type_wrapper<U>)
+{
+    return bc<std::is_same_v<T, U>>;
+}
+
+template<class T, class U>
+decltype(auto) operator>(type_wrapper<T>, type_wrapper<U>)
+{
+    return bc<(sizeof(T) > sizeof(U))>;
+}
+
+template<bool B, class T, class U>
+decltype(auto) cond(std::bool_constant<B>, type_wrapper<T> a, type_wrapper<U> b)
+{
+    return std::conditional_t<B, decltype(a), decltype(b)>{};
+}
+
+namespace detail
+{
+template<class Func, class Container>
+struct filter_fold : Container
+{
+    Func f;
+
+    filter_fold(Func f)
+        : f(f)
+    {
+    }
+
+    Container get() { return {}; }
+
+    template<class T>
+    decltype(auto) operator>>(T x)
+    {
+        return filter_fold<
+            Func,
+            std::conditional_t<
+            decltype(f(v<T>))::value,
+            decltype(v<Container>.add(x)),
+            Container>
+        >(f);
+    }
+};
+
+template<class Func, class R>
+struct reduce_fold
+{
+    Func f;
+
+    R get() { return {}; }
+
+    reduce_fold(Func f)
+        : f(f)
+    {
+    }
+
+    template<class T>
+    decltype(auto) operator>>(T x)
+    {
+        return reduce_fold <
+            Func, decltype(f(R{}, x))
+        >(f);
+    }
+};
+}
+
+template<class... Values>
+struct enumerable
+{
+    template<class T>
+    decltype(auto) add(T)
+    {
+        return enumerable<Values..., T>{};
+    }
+
+    template<class TFunc>
+    decltype(auto) map(TFunc func)
+    {
+        return enumerable<decltype(func(v<Values>))...>{};
+    }
+
+    template<class Func>
+    decltype(auto) filter(Func f)
+    {
+        return (detail::filter_fold<Func, enumerable<>>{f} >> ... >> v<Values>);
+    }
+
+    template<class T, class Func>
+    decltype(auto) reduce(T, Func f)
+    {
+        return (detail::reduce_fold<Func, T>{f} >> ... >> v<Values>);
+    }
+
+    decltype(auto) count()
+    {
+        return count([](auto x) { return bc<true>; });
+    }
+
+    template<class Func>
+    decltype(auto) count(Func func)
+    {
+        return count_impl(decltype(func(v<Values>)){}...);
+    }
+
+    template<bool... Indices>
+    decltype(auto) count_impl(std::bool_constant<Indices>...)
+    {
+        return ic<(... + Indices)>;
+    }
+
+    template<size_t N>
+    decltype(auto) take(std::integral_constant<size_t, N>)
+    {
+        return take_impl(std::make_index_sequence<min_of<N, sizeof...(Values)>>{});
+    }
+
+    template<size_t... Indices>
+    decltype(auto) take_impl(std::index_sequence<Indices...>)
+    {
+        return enumerable<decltype(std::get<Indices>(v<std::tuple<Values...>>))...>{};
+    }
+
+    template<size_t N>
+    decltype(auto) skip(std::integral_constant<size_t, N>)
+    {
+        return skip_impl(ic<N>, std::make_index_sequence<min_of<N, sizeof...(Values)>>{});
+    }
+
+    template<size_t N, size_t... Indices>
+    decltype(auto) skip_impl(std::integral_constant<size_t, N>, std::index_sequence<Indices...>)
+    {
+        return enumerable<decltype(std::get<Indices + N>(v<std::tuple<Values...>>))...>{};
+    }
+};
+
+}
+
+
 #endif // !TEMPLATE_H
