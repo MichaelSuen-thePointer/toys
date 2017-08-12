@@ -129,6 +129,9 @@
     <ClInclude Include="mqlisp.h">
       <Filter>usable</Filter>
     </ClInclude>
+    <ClInclude Include="TmpBase.h">
+      <Filter>usable</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">

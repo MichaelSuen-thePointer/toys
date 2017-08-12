@@ -193,6 +193,7 @@
     <ClInclude Include="StringUtils.h" />
     <ClInclude Include="Template.h" />
     <ClInclude Include="AVLTree.h" />
+    <ClInclude Include="TmpBase.h" />
     <ClInclude Include="tupleext.h" />
   </ItemGroup>
   <ItemGroup>

@@ -63,6 +63,9 @@
   <ItemGroup>
     <ClCompile Include="..\toys\main.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\toys\TmpBase.h" />
+  </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <CLanguageStandard>Default</CLanguageStandard>

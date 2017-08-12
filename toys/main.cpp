@@ -3,6 +3,7 @@
 #include <tuple>
 #include <iostream>
 #include <cxxabi.h>
+#include "TmpBase.h"
 
 std::ostream& operator<<(std::ostream& os, const std::type_info& nfo)
 {
@@ -17,12 +18,6 @@ namespace mq
 {
 
 template<char c>
-struct char_constant
-{
-    constexpr static auto value = c;
-};
-
-template<char c>
 constexpr static auto cc = char_constant<c>{};
 
 template<char... chars>
@@ -35,43 +30,6 @@ struct char_sequence
         return char_constant<std::get<i>(std::make_tuple(chars...))>{};
     }
 };
-
-template<char c1, char c2>
-constexpr std::bool_constant<c1 == c2> operator==(char_constant<c1>, char_constant<c2>)
-{
-    return{};
-}
-
-
-template<char c1, char c2>
-constexpr std::bool_constant<c1 != c2> operator!=(char_constant<c1>, char_constant<c2>)
-{
-    return{};
-}
-
-template<char c1, char c2>
-constexpr std::bool_constant<(c1 > c2)> operator>(char_constant<c1>, char_constant<c2>)
-{
-    return{};
-}
-
-template<char c1, char c2>
-constexpr std::bool_constant<(c1 >= c2)> operator>=(char_constant<c1>, char_constant<c2>)
-{
-    return{};
-}
-
-template<char c1, char c2>
-constexpr std::bool_constant<(c1 < c2)> operator<(char_constant<c1>, char_constant<c2>)
-{
-    return{};
-}
-
-template<char c1, char c2>
-constexpr std::bool_constant<(c1 <= c2)> operator<=(char_constant<c1>, char_constant<c2>)
-{
-    return{};
-}
 
 template<class Sequence, size_t _i, class Result>
 struct parse_result
@@ -169,46 +127,6 @@ constexpr decltype(auto) mkalter(alter<Rs...>, regex<Ts>...)
     return alter<Rs..., Ts...>{};
 }
 
-template<bool b1, bool b2>
-constexpr std::bool_constant<b1 && b2> operator&&(std::bool_constant<b1>, std::bool_constant<b2>)
-{
-    return{};
-}
-
-template<bool b1, bool b2>
-constexpr std::bool_constant<b1 || b2> operator||(std::bool_constant<b1>, std::bool_constant<b2>)
-{
-    return{};
-}
-
-
-template<bool v, class T1, class T2>
-constexpr decltype(auto) cond(std::bool_constant<v>, T1 a, T2 b)
-{
-    if constexpr (v)
-    {
-        return a;
-    }
-    else
-    {
-        return b;
-    }
-}
-
-template<class Curr, class Cond, class Iter>
-constexpr decltype(auto) iter(Curr i, Cond c, Iter e)
-{
-    //static_assert(c(i).value);
-    if constexpr (c(i) == std::true_type{})
-    {
-        return i;
-    }
-    else
-    {
-        return iter(e(i), c, e);
-    }
-}
-
 struct regex_parser
 {
     template<class Seq>
@@ -225,7 +143,7 @@ struct regex_parser
         {
             //static_assert(res.get() == cc<'|'> || res.get() == cc<'\0'>);
             //static_assert(res.get() == cc<'\0'>);
-            return res.get() == cc<'\0'>;
+            return res.get() != cc<'\0'>;
         },
             [](auto res)
         {
@@ -243,7 +161,7 @@ struct regex_parser
             [](auto res)
         {
             //static_assert(res.get() == cc<'\0'>);
-            return (res.get() == cc<'\0'>) || (res.get() == cc<'|'>);
+            return (res.get() != cc<'\0'>) && (res.get() != cc<'|'>);
         },
             [](auto res)
         {
