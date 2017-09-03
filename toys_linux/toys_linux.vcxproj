@@ -74,7 +74,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <CppLanguageStandard>Default</CppLanguageStandard>
-      <AdditionalOptions>-std=c++17 -ftemplate-backtrace-limit=200 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-std=c++17 -ftemplate-backtrace-limit=200 -Wfatal-errors %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

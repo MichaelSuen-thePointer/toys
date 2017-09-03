@@ -389,7 +389,6 @@ detail::atom<'c', 'o', 'n', 's'>  cons{};
 detail::atom<'c', 'o', 'n', 'd'> cond{};
 detail::atom<'e', 'q'> eq{};
 
-
 inline namespace literals
 {
 
